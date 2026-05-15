@@ -1,0 +1,15 @@
+name: sentinel
+version: 0.1.0
+marketplace:
+  display_name: Sentinel
+  description: Moderation intelligence — coordinated brigade detection, ban-evader fingerprinting, and thread-escalation forecasts. Reversible, suggest-only, audit-logged.
+permissions:
+  read_posts: true
+  read_comments: true
+  read_modlog: true
+  read_reports: true
+  manage_posts: true
+  manage_settings: true
+  manage_modmail: true
+  manage_mod_notes: true
+  manage_subreddit: true
