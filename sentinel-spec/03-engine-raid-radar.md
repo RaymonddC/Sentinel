@@ -1,5 +1,10 @@
 # 03 · Raid Radar Engine
 
+## Changelog
+
+- **R-Sub-Overlap-Cap** (plan-review v4 § R-Sub-Overlap-Cap): Documented 100-item cross-sub history hard cap for Signal 3; rewrote signal description and fire-condition to reflect data-source ceiling; added edge-case note on cap-bounded infiltration visibility.
+- **R-Cluster-Graph** (plan-review v4 § R-Cluster-Graph): Cluster visualization updated to lazy-load on alert detail open, cap rendering at ≤20 nodes with "+N more" badge, fixed-height container (320 px), and ≤2 MB cluster-state cache writes.
+
 > Detects coordinated brigades and external raids in real-time. Fires within ~90 seconds of attack onset.
 
 ---
@@ -49,13 +54,13 @@ Fires when `median_age < 30 days` AND `age_entropy < 0.5` (low diversity = likel
 
 ### Signal 3: Sub-overlap concentration
 
-Do the new arrivals share another sub in common?
+Across new arrivals' last 100 cross-sub comments, what fraction share a single external sub? Cross-sub history is fetched via `context.reddit.getCommentsAndPostsByUser({limit: 100, pageSize: 100, sort: "new"})` — hard-capped at 100 items per user by Devvit data-source design (research/06 § Cross-Sub User History).
 
 ```
 top_shared_sub, share_pct = mostCommonOtherSub(new_arrivals)
 ```
 
-Fires when `share_pct > 70%` AND `top_shared_sub != currentSub`.
+Fires when `share_pct > 70%`.
 
 ### Signal 4: Synchronized timing
 
@@ -181,9 +186,9 @@ The pinned mod-only post has a Raid Radar section that shows:
 - Confidence score for active alert
 
 ### Middle: Cluster visualization
-A simplified node graph (rendered as SVG via Devvit Blocks):
+A simplified node graph (rendered as SVG via Devvit Blocks). Lazy-loaded — renders only after the user explicitly opens an alert's detail view. Capped at ≤20 nodes; remaining accounts collapsed into a "+N more accounts" badge. Fixed-height container (320 px) to prevent layout shift. Rendered structure cached in app memory keyed by alertId; cluster-state cache writes chunked to ≤2 MB.
 - Center node: the target thread
-- Surrounding nodes: suspicious accounts
+- Surrounding nodes: suspicious accounts (≤20 displayed)
 - Edge connections: shared external sub
 - Color-coding: red = >0.9 confidence cluster, orange = 0.7–0.9, yellow = monitoring
 
@@ -224,6 +229,7 @@ This is the "learn from mods without ML" loop.
 - **Sub goes legitimately viral** (front page) → high traffic, but diverse accounts. Signals 2 and 3 should NOT fire (entropy is high, no shared sub). If only Signal 1 fires, no alert. ✅
 - **Coordinated by ONE existing user with sock puppets** → Memory engine catches this, not Raid Radar. ✅
 - **Slow infiltration** (1 attacker per hour for 30 hours) → Raid Radar misses. This is by design — it's not a "brigade" in the cinematic sense. Health Score may catch the resulting thread escalation. ✅
+- **Cross-sub history limited to 100 items** → Slow infiltration spanning more than ~100 cross-sub comments per attacker is invisible to Signal 3; Memory's stylometry layer is the secondary catch. ✅
 - **Fresh install, no baseline yet** → Engine uses pre-tuned cold-start defaults for first 7 days, with banner "Detection active, accuracy improving." ✅
 - **Watched thread is locked/archived** → Stop evaluating. Mark thread as not-watched. ✅
 

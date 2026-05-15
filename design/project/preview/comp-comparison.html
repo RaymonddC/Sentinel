@@ -1,0 +1,54 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px;font-family:'IBM Plex Sans',sans-serif}
+  .panel{background:var(--bg-canvas);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden}
+  .rail{position:absolute;left:0;top:0;bottom:0;width:4px;background:#f39c12}
+  .head{padding-left:6px;margin-bottom:10px}
+  .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.06em;line-height:1;background:rgba(243,156,18,.10);color:#f39c12;border:1px solid rgba(243,156,18,.32)}
+  .user{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--fg-0);font-weight:500}
+  .hl{font-size:14px;color:var(--fg-0);font-weight:500;line-height:1.45}
+  .hl .secondary{color:var(--fg-2);font-weight:400}
+  .scores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+  .tile{padding:10px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-canvas);display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden}
+  .tile.accent{border-color:rgba(243,156,18,.32)}
+  .tile.accent::before{content:"";position:absolute;inset:0;background:rgba(243,156,18,.10);pointer-events:none}
+  .label{position:relative;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
+  .v{position:relative;display:flex;align-items:baseline;gap:3px;color:var(--fg-0);font-weight:600;font-family:'IBM Plex Sans',sans-serif;font-size:17px;line-height:1;letter-spacing:-0.01em}
+  .v.big{font-size:20px;color:#f39c12}
+  .pct{font-size:12px;color:var(--fg-2)}
+  .sides{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .side{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+  .eyebrow{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-1);font-weight:500}
+  .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+  ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+  li{font-size:13px;color:var(--fg-1);line-height:1.45;padding-left:12px;position:relative}
+  li::before{content:"";position:absolute;left:0;top:.7em;width:4px;height:1px;background:#4a5159}
+</style></head><body>
+<div class="panel">
+  <div class="rail"></div>
+  <div class="head">
+    <div class="top">
+      <span class="badge">⚠ POSSIBLE BAN EVADER</span>
+      <span class="user">u/new_account_8821</span>
+    </div>
+    <div class="hl">Strong match to u/old_handle_2024 <span class="secondary">(banned Mar 14 for rule 2 — harassment)</span></div>
+  </div>
+  <div class="scores">
+    <div class="tile"><span class="label">Behavioral</span><span class="v">87<span class="pct">%</span></span></div>
+    <div class="tile"><span class="label">Stylometry</span><span class="v">94<span class="pct">%</span></span></div>
+    <div class="tile accent"><span class="label">Combined</span><span class="v big">91<span class="pct">%</span></span></div>
+  </div>
+  <div class="sides">
+    <div class="side">
+      <div class="eyebrow"><span class="dot" style="background:#4a5159"></span>u/old_handle_2024 · banned Mar 14</div>
+      <ul><li>14 comments removed (harassment)</li><li>2 modmail warnings</li><li>Permanent ban (rule 2)</li></ul>
+    </div>
+    <div class="side">
+      <div class="eyebrow"><span class="dot" style="background:#f39c12"></span>u/new_account_8821 · active in last hour</div>
+      <ul><li>3 comments in 2 threads</li><li>Same n-gram fingerprint (0.94)</li><li>Posts at the same hour-of-day</li></ul>
+    </div>
+  </div>
+</div>
+</body></html>

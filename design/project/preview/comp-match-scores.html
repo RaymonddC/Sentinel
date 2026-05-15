@@ -1,0 +1,30 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:20px;display:flex;flex-direction:column;gap:14px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tile{padding:10px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-canvas);display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden}
+  .tile.accent{border-color:rgba(243,156,18,.32)}
+  .tile.accent::before{content:"";position:absolute;inset:0;background:rgba(243,156,18,.10);pointer-events:none}
+  .label{position:relative;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
+  .v{position:relative;display:flex;align-items:baseline;gap:3px;color:var(--fg-0);font-weight:600;font-family:'IBM Plex Sans',sans-serif;font-size:17px;line-height:1;letter-spacing:-0.01em}
+  .v.big{font-size:20px}
+  .v.accent{color:#f39c12}
+  .pct{font-size:12px;color:var(--fg-2)}
+</style></head><body>
+
+<div class="grid">
+  <div class="tile"><span class="label">Behavioral</span><span class="v">87<span class="pct">%</span></span></div>
+  <div class="tile"><span class="label">Stylometry</span><span class="v">94<span class="pct">%</span></span></div>
+  <div class="tile accent"><span class="label">Combined</span><span class="v big accent">91<span class="pct">%</span></span></div>
+</div>
+
+<div style="font-size:13px;color:var(--fg-1);padding:10px 12px;background:var(--bg-canvas);border:1px solid var(--border);border-radius:6px;line-height:1.45">
+  <span style="font-family:'JetBrains Mono',monospace;color:var(--fg-0)">u/new_account_8821</span> · Strong match to <span style="font-family:'JetBrains Mono',monospace;color:var(--fg-0)">u/old_handle_2024</span>
+  <div style="color:var(--fg-2);font-size:12px;margin-top:2px">banned Mar 14 for rule 2 — harassment</div>
+</div>
+
+<div style="font-size:11px;color:var(--fg-2);font-family:'JetBrains Mono',monospace">
+  combined tile uses severity tint · two-decimal scores shown as integers
+</div>
+</body></html>

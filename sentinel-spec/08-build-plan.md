@@ -4,11 +4,40 @@
 
 ---
 
+## Changelog
+
+**v4 revisions applied 2026-05-13 — plan-review v4**
+
+| Revision | Section(s) changed | Summary |
+|---|---|---|
+| R-Bootstrap | Milestone 1 | Updated bootstrap job from 14-day fetch to three-pattern hybrid (top-1000 hot-list + reactive + progressive backfill during calibration ramp). Citation: plan-review v4 § R-Bootstrap. |
+| R-Phase0-Retarget | Phase 0 (new section), Risk register | Added dedicated Phase 0 empirical-spike section before Milestone 1; retargeted spike to remaining unknowns (E-SchedulerTimeout, E-RedisThrottle, E-SlowMode); removed items closed by research/06 (Redis quotas E1, Mod Notes API E4, `accountCreatedAt` E7). Citation: plan-review v4 § R-Phase0-Retarget. |
+| PRI-3 note | Total time estimate | Added optional scope-governance note presenting three cut options under the 2026-06-27 deadline. Lead decides; no cuts applied. Citation: plan-review v4 § PRI-3. |
+
+---
+
 ## Philosophy: build the spine first
 
 The shared infrastructure (event ingestion, behavioral graph, alert dispatcher, audit log) is the spine. Engines plug into the spine. Build the spine FIRST, even if it feels like nothing is "happening" — every engine becomes 3x faster to build once the spine exists.
 
 Don't be tempted to build Raid Radar end-to-end first as a vertical slice. You'll regret it when Memory and Health Score require ripping it apart for shared infra.
+
+---
+
+## Phase 0 — Empirical spike (1 day)
+
+**Goal:** Retire the remaining Devvit runtime unknowns before Milestone 1 begins. Block on Phase 0 results before locking scheduler-chunk size, debounce TTL, and slow-mode velocity impact.
+
+**Spike items:**
+- **E-SchedulerTimeout** — Per-job execution time and memory limit. Schedule a one-off `runJob`; run a CPU-bound loop (counter logged every 30 s) and an I/O-bound loop (Redis writes in a tight loop); record the duration at which Devvit terminates, and whether it emits a timeout error or kills silently. Pass/fail: timeout ≥ 5 minutes. If shorter, R-Bootstrap's hourly progressive backfill job must chunk further.
+- **E-RedisThrottle** — 40K cmds/sec throttle behavior on overrun. Write at 1K / 10K / 50K keys/sec for 60 seconds each; record success rate, p50/p95/p99 latency, error response type, and recovery time after overrun. Pass/fail: ≥10 keys/sec sustained with p99 < 500 ms. If lower, R-Debounce-CAS's debounce widens to 10 s; R-Dispatch-Idempotent's retry backoff lengthens.
+- **E-SlowMode** — Slow-mode velocity impact. Enable slow mode on an active test thread during scripted brigade simulation; measure comments/min for 30 minutes before vs 30 minutes after. Pass/fail: observed reduction within ±20% of the spec's 70% assumption. If outside, update `slowModeVelocityImpact` default in advanced settings and re-derive forecast formula constants.
+
+**Closed by research/06 — no longer in spike:** Redis quotas (E1 closed: 500 MB / installation, 5 MB / request, 40K cmds/sec, 4.2B keys confirmed from `redis.mdx`); Mod Notes API (E4 closed: `addModNote`/`getModNotes` fully typed and verified in production by `fsvreddit/toolboxnotesxfer`); `accountCreatedAt` field name (E7 closed: `user.createdAt` is a `Date` object confirmed from `User.ts`).
+
+Record results in `sentinel-spec/research/09-runtime-probes.md`.
+
+**Demoable:** All three spike probes run and results logged in `09-runtime-probes.md`. Go/no-go decision made for Milestone 1 parameter values (scheduler chunk size, debounce TTL, slow-mode velocity impact default).
 
 ---
 
@@ -21,7 +50,7 @@ Don't be tempted to build Raid Radar end-to-end first as a vertical slice. You'l
 - [ ] KV schema for `SubBaseline`, `UserFingerprint`, `ThreadState`, `Alert`
 - [ ] Statistical primitives: `RollingStat`, `TimeSeries`, `Histogram`
 - [ ] Event ingestion module — handlers for `CommentSubmit`, `PostSubmit`, `ModAction`, `Report`
-- [ ] Bootstrap job — scan last 14 days on install
+- [ ] Bootstrap job — three-pattern hybrid: (P1) top-1000 hot-list fetch at install, (P2) reactive accumulation on all incoming events from t=0, (P3) progressive scheduled backfill during 7-day calibration ramp
 - [ ] Settings storage with default values
 - [ ] Welcome modal (basic version)
 
@@ -172,6 +201,14 @@ The hackathon deadline is May 27, 2026. Today is May 10. That's 17 calendar days
 
 Don't cut Raid Radar, dashboard, or Health Score. These are the platform's core.
 
+**Scope governance option (PRI-3 — surfaced, lead decides):**
+The 2026-06-27 deadline gives ~10–14 working days of buffer over the spec's 24-day high estimate. Three options to consider proactively before Milestone 4 begins:
+- **(a) Default** — build all three engines per spec; use the buffer for polish and demo prep. No changes required.
+- **(b) Cut Memory to v1.1** — ship Raid Radar + Health Score + Memory dashboard stub at hackathon submission; deliver full Memory engine as a post-hackathon update. Reclaims 4–6 days; `08-build-plan.md` Milestone 6 would be deferred accordingly.
+- **(c) Cut Health Score forecast model** — keep risk score + triage queue; drop forecast generation only. Reclaims 1–2 days for visual polish and demo iteration.
+
+No cut is applied here. This is a governance note; lead decides. Decide before Milestone 4 begins so the build sequence reflects any cut.
+
 ---
 
 ## Per-milestone definition of done
@@ -190,9 +227,11 @@ Don't move to the next milestone with a previous one half-done. Half-done milest
 
 ### "Devvit doesn't expose the data I need"
 
-Risk for: account creation date, sub overlap, referrer info.
+Risk for: sub overlap hard cap, scheduler per-job timeout, Redis throttle behavior on overrun.
 
-Mitigation: do a 1-day spike at the start of Milestone 1 specifically to verify what Devvit's API gives you. If `accountCreatedAt` isn't accessible, Raid Radar Signal 2 (account-age cluster) needs replacement. If sub overlap requires fetching each user's history individually, it's expensive but doable.
+**Closed by research/06 (no longer empirical unknowns):** `accountCreatedAt` field name confirmed (`user.createdAt` is a `Date` object, not Unix-seconds); Mod Notes API fully typed and verified in production; Redis quotas confirmed from `redis.mdx` (500 MB / installation, 5 MB per-request, 40K cmds/sec, 4.2B keys). Sub overlap is capped at 100 cross-sub items per user by Devvit API design; both Raid Radar Signal 3 and Memory `subOverlap` are spec-updated to document this.
+
+**Still-unknown (addressed in Phase 0):** Per-job scheduler execution timeout (E-SchedulerTimeout), Redis throttle behavior on overrun (E-RedisThrottle), slow-mode velocity impact (E-SlowMode). See Phase 0 above — block on these results before locking Milestone 1 parameters. Record results in `sentinel-spec/research/09-runtime-probes.md`.
 
 If something in the spec turns out to be impossible on Devvit, document the limitation and adapt — don't try to work around it with hacks.
 

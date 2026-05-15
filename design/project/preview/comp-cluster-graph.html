@@ -1,0 +1,48 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px;display:flex;flex-direction:column;gap:10px}
+  .frame{background:var(--bg-canvas);border:1px solid var(--border);border-radius:10px;padding:12px;position:relative}
+  .meta-tl{position:absolute;top:10px;left:14px;font-size:11px;color:var(--fg-2);font-family:'IBM Plex Sans',sans-serif}
+  .meta-tr{position:absolute;top:10px;right:14px;font-size:11px;color:var(--fg-2);display:flex;align-items:center;gap:6px}
+  .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+  .meta-tr .mono{font-family:'JetBrains Mono',monospace;color:var(--fg-0);font-size:11px}
+  .meta-bl{position:absolute;bottom:10px;left:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-0)}
+</style></head><body>
+<div class="frame">
+  <span class="meta-tl">cluster #C-441 · 12 accounts</span>
+  <span class="meta-tr"><span class="dot" style="background:#e74c3c"></span>coordination strength <span class="mono">0.81</span></span>
+  <svg viewBox="0 0 560 220" width="100%">
+    <!-- target node + accounts on two rings -->
+    <g stroke="#3a4148" stroke-width="0.8" opacity="0.85">
+      <!-- target → accounts -->
+      <line x1="280" y1="110" x2="368" y2="138"/><line x1="280" y1="110" x2="240" y2="186"/>
+      <line x1="280" y1="110" x2="194" y2="148"/><line x1="280" y1="110" x2="200" y2="78"/>
+      <line x1="280" y1="110" x2="252" y2="46"/><line x1="280" y1="110" x2="340" y2="56"/>
+      <line x1="280" y1="110" x2="372" y2="86"/><line x1="280" y1="110" x2="356" y2="172"/>
+      <line x1="280" y1="110" x2="298" y2="184"/><line x1="280" y1="110" x2="216" y2="172"/>
+      <line x1="280" y1="110" x2="180" y2="110"/><line x1="280" y1="110" x2="320" y2="40"/>
+    </g>
+    <!-- cross-links -->
+    <g stroke="#3a4148" stroke-width="0.8" opacity="0.6">
+      <line x1="368" y1="138" x2="356" y2="172"/><line x1="356" y1="172" x2="298" y2="184"/>
+      <line x1="298" y1="184" x2="240" y2="186"/><line x1="240" y1="186" x2="216" y2="172"/>
+      <line x1="216" y1="172" x2="194" y2="148"/><line x1="194" y1="148" x2="180" y2="110"/>
+      <line x1="180" y1="110" x2="200" y2="78"/><line x1="200" y1="78" x2="252" y2="46"/>
+      <line x1="252" y1="46" x2="320" y2="40"/><line x1="320" y1="40" x2="340" y2="56"/>
+      <line x1="340" y1="56" x2="372" y2="86"/><line x1="372" y1="86" x2="368" y2="138"/>
+    </g>
+    <!-- target -->
+    <circle cx="280" cy="110" r="10" fill="#22272d" stroke="#aab2bd" stroke-width="1.5"/>
+    <text x="280" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#aab2bd">thread</text>
+    <!-- account nodes -->
+    <g fill="#e74c3c" stroke="#0b0d0f" stroke-width="1.5">
+      <circle cx="368" cy="138" r="4.5"/><circle cx="356" cy="172" r="4.5"/><circle cx="298" cy="184" r="4.5"/>
+      <circle cx="240" cy="186" r="4.5"/><circle cx="216" cy="172" r="4.5"/><circle cx="194" cy="148" r="4.5"/>
+      <circle cx="180" cy="110" r="4.5"/><circle cx="200" cy="78" r="4.5"/><circle cx="252" cy="46" r="4.5"/>
+      <circle cx="320" cy="40" r="4.5"/><circle cx="340" cy="56" r="4.5"/><circle cx="372" cy="86" r="4.5"/>
+    </g>
+  </svg>
+  <span class="meta-bl">12 accounts · 1 target</span>
+</div>
+</body></html>

@@ -1,0 +1,55 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px;display:flex;flex-direction:column;gap:6px;font-family:'IBM Plex Sans',sans-serif}
+  .row{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden}
+  .risk{width:44px;flex-shrink:0;display:flex;flex-direction:column;gap:1px}
+  .risk .v{font-size:20px;font-weight:600;letter-spacing:-0.01em;line-height:1}
+  .risk .l{font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--fg-2)}
+  .mid{flex:1;min-width:0}
+  .top{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap}
+  .user{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--fg-0);font-weight:500}
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.06em;line-height:1;border:1px solid}
+  .summary{font-size:13px;color:var(--fg-1);line-height:1.45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .when{flex-shrink:0;font-size:12px;font-family:'JetBrains Mono',monospace}
+  .b-high{background:rgba(243,156,18,.10);color:#f39c12;border-color:rgba(243,156,18,.32)}
+  .b-med {background:rgba(245,176,65,.08);color:#f5b041;border-color:rgba(245,176,65,.28)}
+</style></head><body>
+
+<div class="row">
+  <div class="risk"><span class="v" style="color:#f39c12">91</span><span class="l">RISK</span></div>
+  <div class="mid">
+    <div class="top"><span class="user">u/new_account_8821</span><span class="badge b-high">POSSIBLE BAN EVADER</span></div>
+    <div class="summary">Strong match to u/old_handle_2024 (combined 91%)</div>
+  </div>
+  <div class="when" style="color:#f39c12">active now</div>
+</div>
+
+<div class="row">
+  <div class="risk"><span class="v" style="color:#f5b041">68</span><span class="l">RISK</span></div>
+  <div class="mid">
+    <div class="top"><span class="user">u/cold_take_central_2</span><span class="badge b-med">POSSIBLE RETURN</span></div>
+    <div class="summary">Likely match to u/cold_take_central (combined 68%)</div>
+  </div>
+  <div class="when" style="color:var(--fg-2)">32 min ago</div>
+</div>
+
+<div class="row">
+  <div class="risk"><span class="v" style="color:#f5b041">54</span><span class="l">RISK</span></div>
+  <div class="mid">
+    <div class="top"><span class="user">u/late_night_poster</span><span class="badge b-med">WATCH</span></div>
+    <div class="summary">3 prior modmail threads · no removals</div>
+  </div>
+  <div class="when" style="color:var(--fg-2)">2h ago</div>
+</div>
+
+<div class="row">
+  <div class="risk"><span class="v" style="color:#f39c12">82</span><span class="l">RISK</span></div>
+  <div class="mid">
+    <div class="top"><span class="user">u/anon_burner_991</span><span class="badge b-high">NEW + ACTIVE</span></div>
+    <div class="summary">Account 3 days old · 47 comments today across 12 threads</div>
+  </div>
+  <div class="when" style="color:#f39c12">active now</div>
+</div>
+
+</body></html>

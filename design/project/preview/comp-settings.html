@@ -1,0 +1,63 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px;display:flex;flex-direction:column;gap:14px;font-family:'IBM Plex Sans',sans-serif}
+  .section{background:var(--bg-canvas);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2);margin-bottom:10px}
+  .hint{font-size:12px;color:var(--fg-2);margin-bottom:10px;line-height:1.45;margin-top:-4px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-subtle)}
+  .row:last-child{border-bottom:none}
+  .label{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+  .t{font-size:13px;color:var(--fg-0);font-weight:500}
+  .h{font-size:12px;color:var(--fg-2)}
+  /* Radio group */
+  .rg{display:inline-flex;border:1px solid var(--border);background:var(--bg-canvas);border-radius:6px;padding:2px}
+  .rg button{all:unset;cursor:pointer;padding:6px 14px;min-width:56px;text-align:center;font-size:13px;color:var(--fg-2);border-radius:4px;border:1px solid transparent}
+  .rg .a-low{color:#46a973;background:rgba(70,169,115,.10);border-color:rgba(70,169,115,.32);font-weight:600}
+  .rg .a-med{color:#f5b041;background:rgba(245,176,65,.08);border-color:rgba(245,176,65,.28);font-weight:600}
+  .rg .a-high{color:#f39c12;background:rgba(243,156,18,.10);border-color:rgba(243,156,18,.32);font-weight:600}
+  /* Checkbox */
+  .cb{display:flex;align-items:flex-start;gap:10px;padding:8px 0}
+  .cb .box{width:18px;height:18px;border-radius:4px;border:1px solid #5b8def;background:#5b8def;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;color:#0b0d0f;font-size:12px;font-weight:bold}
+  .cb .body{flex:1}
+  .cb .label-row{display:flex;align-items:center;gap:8px}
+  .cb .always{font-size:10px;color:var(--fg-2);font-family:'JetBrains Mono',monospace;padding:1px 6px;border:1px solid var(--border);border-radius:4px}
+  .cb .hint{font-size:12px;color:var(--fg-2);margin-top:2px;margin-bottom:0}
+</style></head><body>
+
+<div class="section">
+  <div class="eyebrow">Engine sensitivity</div>
+  <div class="hint">Higher catches more, including some false positives. Lower means only high-confidence alerts.</div>
+  <div class="row">
+    <div class="label"><span class="t">Raid Radar</span><span class="h">Coordinated brigades · vote rings · sockpuppet swarms</span></div>
+    <div class="rg"><button class="a-low">Low</button><button>Medium</button><button>High</button></div>
+  </div>
+  <div class="row">
+    <div class="label"><span class="t">Memory</span><span class="h">Returning users · ban evasion · stylometry matches</span></div>
+    <div class="rg"><button>Low</button><button>Medium</button><button class="a-high">High</button></div>
+  </div>
+  <div class="row">
+    <div class="label"><span class="t">Health Score</span><span class="h">Subreddit-level risk · forecasts · auto-actions</span></div>
+    <div class="rg"><button>Low</button><button class="a-med">Medium</button><button>High</button></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="eyebrow">Alert delivery</div>
+  <div class="cb">
+    <span class="box">✓</span>
+    <div class="body">
+      <div class="label-row"><span class="t">Pinned dashboard</span><span class="always">always on</span></div>
+      <div class="hint">Sentinel is always pinned at the top of the sub. This is the surface you're looking at.</div>
+    </div>
+  </div>
+  <div class="cb">
+    <span class="box">✓</span>
+    <div class="body">
+      <div class="label-row"><span class="t">Modmail for critical alerts</span></div>
+      <div class="hint">Sentinel sends a modmail when a CRITICAL alert opens. High and medium stay in the dashboard only.</div>
+    </div>
+  </div>
+</div>
+
+</body></html>

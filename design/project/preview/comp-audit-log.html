@@ -1,0 +1,26 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px}
+  .log{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border-subtle);font-family:'IBM Plex Sans',sans-serif}
+  .row:last-child{border-bottom:none}
+  .time{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-2);width:44px;flex-shrink:0;padding-top:1px}
+  .mod{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;width:130px;flex-shrink:0;padding-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mod-user{color:var(--fg-0)}
+  .mod-bot{color:#5b8def}
+  .body{flex:1;min-width:0}
+  .action{font-size:13px;color:var(--fg-1);line-height:1.45}
+  .trig{font-size:12px;color:var(--fg-2);margin-top:2px}
+  .trig .l{color:#4a5159}
+  .trig .e{color:var(--fg-1)}
+  .trig .v{font-family:'JetBrains Mono',monospace}
+  .chips{display:flex;gap:6px;margin-top:6px}
+  .chip{font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:var(--fg-1);padding:3px 8px;border:1px solid var(--border);border-radius:6px;cursor:pointer}
+</style></head><body>
+<div class="log">
+  <div class="row"><span class="time">14:23</span><span class="mod mod-user">u/mod_jane</span><div class="body"><div class="action">enabled slow mode on "How is this allowed?"</div><div class="trig"><span class="l">Triggered by:</span> <span class="e">Raid Radar</span> <span class="v">(89% confidence)</span></div><div class="chips"><span class="chip">Undo</span><span class="chip">See alert</span></div></div></div>
+  <div class="row"><span class="time">13:47</span><span class="mod mod-bot">Sentinel</span><div class="body"><div class="action">auto-filtered new accounts on "How is this allowed?"</div><div class="trig"><span class="l">Triggered by:</span> <span class="e">Health Score</span> <span class="v">(risk 92)</span></div><div class="chips"><span class="chip">Undo</span><span class="chip">See alert</span></div></div></div>
+  <div class="row"><span class="time">12:10</span><span class="mod mod-user">u/mod_alex</span><div class="body"><div class="action">dismissed Memory alert for u/suspect_user</div><div class="chips"><span class="chip">See alert</span></div></div></div>
+</div>
+</body></html>

@@ -1,5 +1,13 @@
 # 09 · Demo Video Script
 
+## Changelog
+
+| Revision | Summary | Citation |
+|---|---|---|
+| R-Demo-Honest-Framing | Added `## Statistical realism note` section: paragraph documenting small-sub z-score degradation (`stddev \|\| 1` fallback, Memory ≥10-comment gate, Health Score cold baselines); `### Pre-demo checklist` with 4 formal pre-staging steps (alts, Memory banned-index seed, ThreadState injection, High Sensitivity config); `### Public framing` with verbatim YouTube/Devpost copy. The 94% style match in the Memory shot (§ [0:18–0:25]) is against a pre-seeded banned-index entry — clarified in checklist step 2. | PRI-2 (Q2/Q13 Demo realism and honest framing); research/08 § Part B + § Honest framing options |
+
+---
+
 > 60-second demo video for Devpost submission. Shot list, voiceover, and timing. The video is the most important deliverable after the working app — judges may not test the app personally, but they all watch the video.
 
 ---
@@ -124,6 +132,27 @@ Visual: App listing URL appears
 Text: "developers.reddit.com/apps/sentinel"
 End card.
 ```
+
+---
+
+## Statistical realism note
+
+Sentinel's z-score engines (Raid Radar Signal 1, Health Score velocity) are calibrated for production subs at Q15 scale (10K–500K members). On the demo test sub (<200 members per Q2), baselines remain at the `stddev || 1` fallback for weeks of normal accumulation — Signal 1 effectively becomes an absolute-count trigger (~5 new accounts in 5 minutes). Memory's ≥10-comment evaluation gate cannot be reached organically (~50-day natural accumulation per user). Health Score thread-velocity baselines are undefined on threads with <10 comments. The demo therefore uses pre-staged alts (Raid Radar), pre-seeded fingerprints (Memory), and synthesized state (Health Score timelapse) — see Pre-demo checklist below. This is normal hackathon practice and is documented for transparency.
+
+### Pre-demo checklist
+
+Before recording any segment, complete each step in order:
+
+1. **Pre-stage 8 alt accounts** in a separate browser tab with comments ready to paste.
+2. **Pre-populate Memory's banned-index** with the suspect's old-account fingerprint (the 94% style match shown at [0:18–0:25] is against this pre-seeded entry, not a cold-start alt — Memory cannot reach its ≥10-comment evaluation gate organically on the test sub).
+3. **Pre-inject ThreadState** with a rising velocity trajectory for the Health Score timelapse thread.
+4. **Configure the test sub to "High Sensitivity"** in Sentinel settings so signals fire at demo scale.
+
+### Public framing
+
+Use this text verbatim in the YouTube video description and Devpost narrative:
+
+> "Demo recorded on a private test subreddit with pre-staged test scenarios to demonstrate the full detection and response workflow. In production, Sentinel learns each sub's baseline over 3–7 days and detects organic brigades without pre-staging."
 
 ---
 

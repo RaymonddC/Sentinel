@@ -1,5 +1,11 @@
 # 06 · Dashboard and UI
 
+## Changelog
+
+| Rev | Section changed | Summary | Plan-review citation |
+|---|---|---|---|
+| R-Cluster-Graph | § Tab: Threats | Cluster graph lazy-load, ≤20-node cap, 320 px fixed height, alertId in-memory cache, ≤2 MB write constraint added | `00-plan-review.md` (v4) R-Cluster-Graph |
+
 > What the mod sees when Sentinel is installed. The visual mockup at `tier_s_mockups.html` and `sentinel_demos.html` are reference implementations — match the structure, refine details as needed.
 
 ---
@@ -75,6 +81,13 @@ Live feed of open alerts, newest first. Each alert is an interactive card:
 ```
 
 Clicking the alert title opens the engine-specific detail view (the cluster graph for Raid Radar, the side-by-side for Memory, the gauge + signals for Health Score).
+
+**Cluster graph implementation constraints (Raid Radar detail view):**
+- **Lazy-load:** render only after the user explicitly opens an alert's detail view — do not render inline in the card list.
+- **Node cap:** ≤20 nodes; collapse remainder into "+N more accounts" badge.
+- **Fixed-height container:** 320 px to prevent layout shift.
+- **In-memory cache:** rendered structure cached by alertId; no re-render on re-open unless alert state has changed.
+- **Cluster-state cache writes:** ≤2 MB per write (see `02-architecture.md` § Devvit Redis schema note on 5 MB per-request cap).
 
 ### Tab: Users
 

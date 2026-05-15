@@ -1,0 +1,16 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .row2{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .text-swatch{background:var(--bg-canvas);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 14px 12px}
+  .text-sample{font-size:22px;font-weight:600;letter-spacing:-0.01em;margin-bottom:8px;line-height:1.1}
+  .label{font-family:var(--font-mono);font-size:11px;color:var(--fg-2)}
+  .hex{font-family:var(--font-mono);font-size:11px;color:var(--fg-2);margin-top:2px}
+</style></head><body>
+<div class="row2">
+  <div class="text-swatch"><div class="text-sample" style="color:#e6e9ed">Aa Bb</div><div class="label">--fg-0 · primary</div><div class="hex">#e6e9ed</div></div>
+  <div class="text-swatch"><div class="text-sample" style="color:#aab2bd">Aa Bb</div><div class="label">--fg-1 · secondary</div><div class="hex">#aab2bd</div></div>
+  <div class="text-swatch"><div class="text-sample" style="color:#6e7681">Aa Bb</div><div class="label">--fg-2 · tertiary</div><div class="hex">#6e7681</div></div>
+  <div class="text-swatch"><div class="text-sample" style="color:#4a5159">Aa Bb</div><div class="label">--fg-3 · disabled</div><div class="hex">#4a5159</div></div>
+</div>
+</body></html>

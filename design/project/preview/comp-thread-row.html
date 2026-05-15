@@ -1,0 +1,51 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px;display:flex;flex-direction:column;gap:6px;font-family:'IBM Plex Sans',sans-serif}
+  .row{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px 12px 18px;display:flex;gap:12px;position:relative;overflow:hidden}
+  .rail{position:absolute;left:0;top:0;bottom:0;width:4px}
+  .risk{width:52px;flex-shrink:0;display:flex;flex-direction:column;gap:2px}
+  .risk .v{font-size:20px;font-weight:600;letter-spacing:-0.01em;line-height:1}
+  .risk .trend{font-size:10px;font-weight:600;letter-spacing:.06em;font-family:'JetBrains Mono',monospace}
+  .mid{flex:1;min-width:0}
+  .title{font-size:14px;color:var(--fg-0);font-weight:600;line-height:1.3;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .summary{font-size:12px;color:var(--fg-1);line-height:1.45;margin-bottom:6px}
+  .signals{display:flex;flex-wrap:wrap;gap:4px}
+  .pill{font-size:11px;padding:1px 7px;border-radius:6px;background:var(--bg-canvas);border:1px solid var(--border);color:var(--fg-1);font-family:'JetBrains Mono',monospace;line-height:1.4}
+  .right{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-2);min-width:70px}
+  .right .n{color:var(--fg-0)}
+</style></head><body>
+
+<div class="row">
+  <div class="rail" style="background:#e74c3c"></div>
+  <div class="risk"><span class="v" style="color:#e74c3c">89</span><span class="trend" style="color:#e74c3c">↑ rising</span></div>
+  <div class="mid">
+    <div class="title">"How is this allowed?"</div>
+    <div class="summary">Brigade in progress · 38 new accounts · 90s window</div>
+    <div class="signals"><span class="pill">brigade: 38</span><span class="pill">new accounts: 92%</span><span class="pill">report rate ×8</span></div>
+  </div>
+  <div class="right"><span><span class="n">142</span> reports</span><span><span class="n">21</span> removed</span><span>38m</span></div>
+</div>
+
+<div class="row">
+  <div class="rail" style="background:#f39c12"></div>
+  <div class="risk"><span class="v" style="color:#f39c12">78</span><span class="trend" style="color:#f39c12">↑ rising</span></div>
+  <div class="mid">
+    <div class="title">"AMA: my unpopular take"</div>
+    <div class="summary">Risk climbed from 41 to 78 in 14 min · without intervention, peak 95% in 90 min</div>
+    <div class="signals"><span class="pill">report rate ×4</span><span class="pill">removal rate +12%</span><span class="pill">new-account share 34%</span></div>
+  </div>
+  <div class="right"><span><span class="n">67</span> reports</span><span><span class="n">8</span> removed</span><span>2h</span></div>
+</div>
+
+<div class="row">
+  <div class="rail" style="background:#46a973"></div>
+  <div class="risk"><span class="v" style="color:#46a973">22</span><span class="trend" style="color:#46a973">↓ easing</span></div>
+  <div class="mid">
+    <div class="title">"Weekly meta thread"</div>
+    <div class="summary">Within baseline · no signals firing</div>
+  </div>
+  <div class="right"><span><span class="n">6</span> reports</span><span><span class="n">0</span> removed</span><span>22h</span></div>
+</div>
+
+</body></html>

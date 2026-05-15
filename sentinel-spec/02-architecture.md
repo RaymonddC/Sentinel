@@ -1,5 +1,17 @@
 # 02 · Architecture
 
+## Changelog
+
+### 2026-05-12 — Phase 2 spec revisions applied (per `00-plan-review.md` v4)
+- R-Bootstrap: Replace infeasible 14-day fetch with three-pattern hybrid (P1 hot-1000 + P2 reactive + P3 progressive); update `bootstrapBaseline()` comments (see plan-review § R-Bootstrap)
+- R-Welford: Pin Welford-with-decay for volatile signals, full-history for slow-changing; remove "rolling window" annotation on `SubBaseline`; add `M_MAX` constants to `RollingStat`; drop `baselineWindowDays` from advanced settings (see plan-review § R-Welford)
+- R-NoSets: Re-encode `alerts:open` as SortedSet, `alerts:by_target` as Hash; add Devvit Redis primitive note (see plan-review § R-NoSets)
+- R-5MB-Chunking: Add 5 MB cap note; add `sentinel:memory:banned:{userId}` + `sentinel:memory:banned_ids` per-user key pattern to schema (see plan-review § R-5MB-Chunking)
+- R-ModNotes-Now: Add Mod Notes integration note to `ModAction` trigger row (see plan-review § R-ModNotes-Now)
+- R-Dispatch-Idempotent: Replace "atomic persistence" framing with 7-step idempotent retry + WATCH/MULTI/EXEC + crash recovery (see plan-review § R-Dispatch-Idempotent)
+- R-Debounce-CAS: Document KV compare-and-set pattern for 5 s debounce (see plan-review § R-Debounce-CAS)
+- R-Stylometry-Norm: Change `vocabulary` type to `Map<string, number>` with frequency cap; pin `Histogram` bucket schemas + histogram-intersection overlap formula (see plan-review § R-Stylometry-Norm)
+
 > The shared infrastructure that all three engines build on. Read this before reading any individual engine spec.
 
 ---
@@ -42,7 +54,7 @@ Tracks "what's normal" for the installed subreddit.
 ```typescript
 type SubBaseline = {
   subId: string;
-  // Rolling window stats (last 14 days)
+  // Online stats — seeded by top-1000 hot-post bootstrap, accumulated continuously
   commentsPerHour: RollingStat;        // mean, stddev, count
   postsPerHour: RollingStat;
   uniqueCommentersPerHour: RollingStat;
@@ -84,7 +96,7 @@ type UserFingerprint = {
     capitalization: { allCaps: number; properCase: number; lowercase: number };
     emojiUsage: Map<string, number>;
     topNgrams: Map<string, number>;    // top 50 trigrams
-    vocabulary: Set<string>;            // distinct words seen
+    vocabulary: Map<string, number>;    // word → frequency; capped at top-2000 (drop lowest-freq 500 when map exceeds 2500)
   };
   // Cross-sub graph
   otherSubs: Map<string, number>;      // sub → comment count
@@ -163,12 +175,18 @@ sentinel:baseline                     → SubBaseline
 sentinel:user:{userId}                → UserFingerprint
 sentinel:thread:{postId}              → ThreadState
 sentinel:alert:{alertId}              → Alert
-sentinel:alerts:open                  → Set<alertId>            (sorted by time)
-sentinel:alerts:by_target:{targetId}  → Set<alertId>
+sentinel:alerts:open                  → SortedSet<alertId>      (score = createdAtMs; zAdd/zRange)
+sentinel:alerts:by_target:{targetId}  → Hash<alertId, '1'>      (hash-as-set; hSet/hGet/hGetAll)
 sentinel:settings                     → SubSettings
+sentinel:memory:banned:{userId}       → BannedUserSummary       (~400–750 bytes; per-user key)
+sentinel:memory:banned_ids            → SortedSet<userId>       (score = bannedAt; enumeration index)
 sentinel:audit_log                    → List<AuditEntry>        (capped, last 1000)
 sentinel:calibration                  → CalibrationData          (false positive tracking)
 ```
+
+> **Devvit Redis primitive note:** Devvit Redis does not support standard Redis Sets (`SADD`/`SMEMBERS`/`SISMEMBER`), key enumeration (`KEYS`/`SCAN`), pipelining, or Lua scripts. Set-like structures use sorted-set-as-set (score = timestamp, when ordering matters) or hash-as-set (value = `'1'`, when unordered O(1) lookup suffices).
+
+> **5 MB write cap:** Devvit Redis enforces a 5 MB maximum per request. All schema keys above are bounded per entity (30–150 KB per key); no single write exceeds 1 MB by design. The sole structural exception is the banned-user index — restructured to per-user keys (see `sentinel:memory:banned:{userId}` below).
 
 **Storage budget per sub:** roughly 500MB upper bound for ~10K active commenters. Aging policy keeps it bounded indefinitely.
 
@@ -184,7 +202,7 @@ Every Devvit trigger writes to the graph through a single ingestion module. This
 |---|---|
 | `PostSubmit` | Thread state (new), sub baseline (post rate) |
 | `CommentSubmit` | Thread state (velocity, sentiment), user fingerprint (behavior + style), sub baseline |
-| `ModAction` | User fingerprint (mod actions), audit log |
+| `ModAction` | User fingerprint (mod actions), audit log; on `banuser` event, optionally write Mod Note (`addModNote`) summarising signals; at install, optionally seed banned-index from prior ban history via `getModNotes({filter:'BAN'})` |
 | `PostReport` / `CommentReport` | Thread state (report rate), alert severity bumps |
 | `AppInstall` | Onboarding flow trigger |
 | `AppUpgrade` | Settings migration |
@@ -205,7 +223,18 @@ async function ingestModAction(event: ModActionEvent): Promise<void> { ... }
 async function ingestReport(event: ReportEvent): Promise<void> { ... }
 ```
 
-**Debouncing matters:** A brigade fires 50 comments in 10 seconds. Don't re-evaluate Raid Radar on every single comment — debounce engine evaluations to once per 5 seconds per thread.
+**Debouncing matters:** A brigade fires 50 comments in 10 seconds. Don't re-evaluate Raid Radar on every single comment — debounce engine evaluations to once per 5 seconds per thread. Devvit triggers have no built-in debounce; implement via KV compare-and-set:
+
+```typescript
+// Before engine evaluation in ingestComment / ingestPost:
+const key = `sentinel:thread:${postId}:lastEval`;  // TTL ~60 s
+const last = await redis.get(key);
+if (last && Date.now() - parseInt(last) < 5000) return;  // within window — skip
+await redis.set(key, String(Date.now()), { expiration: 60 });
+// proceed with engine evaluation
+```
+
+*Approximate debounce — concurrent handlers may race; the 5 s budget is a soft floor.*
 
 ---
 
@@ -215,16 +244,31 @@ These are the building blocks the engines use. Implement once, reuse everywhere.
 
 ### RollingStat (running mean + stddev)
 
-Welford's online algorithm. Memory-efficient. Updates in O(1).
+Two modes per signal type (research/09):
+- **Welford-with-decay** (volatile signals: comments/h, velocity/min, report-rate, sentiment swing): standard Welford update with capped count — `if (n > M_MAX) n = M_MAX`. Warm-up is identical to full-history Welford; saturated phase is EWMA-equivalent with α = 1/M_MAX. Constants: `M_MAX_HOURLY = 336` (14d × 24h); `M_MAX_5MIN = 4032` (14d × 288).
+- **Full-history Welford** (slow-changing signals: account-age distribution, new-account ratio): unbounded accumulation is the correct baseline; no cap applied.
+
+EWMA rejected: warm-up underestimates variance for first 7–14 days. Sliding-window Welford rejected: O(N) recompute exceeds ≤20 ms per-comment budget at sub-minute rates.
 
 ```typescript
 class RollingStat {
-  private count = 0;
+  static readonly M_MAX_HOURLY = 336;   // 14d × 24h  — volatile hourly signals
+  static readonly M_MAX_5MIN   = 4032;  // 14d × 288  — volatile 5-min signals
+
+  private n = 0;
   private mean = 0;
   private m2 = 0;
 
-  push(value: number): void { /* Welford's */ }
-  get stddev(): number { /* sqrt(m2 / count) */ }
+  /**
+   * @param mMax  Pass RollingStat.M_MAX_HOURLY or M_MAX_5MIN for volatile signals;
+   *              omit (or pass Infinity) for slow-changing signals (full-history Welford).
+   */
+  push(value: number, mMax = Infinity): void {
+    this.n++;
+    if (this.n > mMax) this.n = mMax;   // decay cap — one extra line; see research/09
+    /* Welford's update: mean, m2 */
+  }
+  get stddev(): number { /* sqrt(m2 / n) */ }
   zScore(value: number): number {
     return (value - this.mean) / (this.stddev || 1);
   }
@@ -250,14 +294,21 @@ class TimeSeries {
 
 ### Histogram
 
-For account-age distributions, comment-length distributions, etc.
+For account-age distributions, comment-length distributions, etc. Bucket schemas are pinned to prevent implementer divergence:
+
+- **posting-time histogram** — 24 buckets (one per UTC hour 0–23)
+- **account-age histogram** — 10 buckets: 0–7d, 7–30d, 30–90d, 90–180d, 180d–1y, 1–2y, 2–5y, 5–10y, 10y+, unknown
+- **comment-length histogram** — 5 buckets: 0–50, 50–200, 200–500, 500–1500, 1500+ chars
+
+Overlap formula: **histogram intersection** — `Σ min(a[i], b[i])` over normalized buckets (each bucket count ÷ total, so vectors sum to 1.0; intersection returns similarity ∈ [0, 1]).
 
 ```typescript
 class Histogram {
   private buckets: Map<number, number>;
   add(value: number): void;
   percentile(p: number): number;
-  entropy(): number;          // for "how diverse is this distribution"
+  entropy(): number;                      // how diverse is this distribution
+  overlap(other: Histogram): number;      // histogram intersection ∈ [0, 1]
 }
 ```
 
@@ -265,11 +316,19 @@ class Histogram {
 
 ```typescript
 async function bootstrapBaseline(subId: string): Promise<void> {
-  // Fetch last 14 days of posts/comments via Devvit API
-  // Run them through ingestComment / ingestPost
-  // Mark baseline.bootstrapComplete = true at the end
+  // P1 — on install: fetch top-1000 hot posts + their top comments;
+  //       index into SubBaseline and initial UserFingerprint records.
+  //       (<50 API calls; completes in <2 minutes; non-blocking)
+  // P2 — from t=0: all engines run reactively on every incoming event;
+  //       no historical data required for live detection.
+  // P3 — progressive backfill: hourly scheduled job fills the 3–14d gap
+  //       in rate-limit-safe batches (≤50 API calls per job run,
+  //       within the 60 runJob/min ceiling).
+  //       bootstrapComplete flips to true after the 7-day ramp.
 }
 ```
+
+> Welcome modal copy: "Scanning your sub's recent activity to seed your baseline. Detection is active immediately; accuracy improves over the next 7 days."
 
 ---
 
@@ -279,11 +338,19 @@ Single point of truth for "an engine fired an alert."
 
 ```typescript
 async function dispatchAlert(alert: Alert): Promise<void> {
-  // 1. Persist alert to KV
-  // 2. Update sentinel:alerts:open set
-  // 3. Update dashboard pinned post (debounced)
-  // 4. If severity === 'critical', send modmail
-  // 5. Add audit log entry
+  // Steps are idempotent and keyed by alertId — safe to replay on crash.
+  // Primary: WATCH/MULTI/EXEC transaction for steps 1–3 (atomic multi-key write,
+  //   confirmed available via TxClientLike in @devvit/public-api; research/10).
+  // 1. Persist sentinel:alert:{alertId} with dispatchState: 'pending'
+  // 2. zAdd sentinel:alerts:open  (score = createdAtMs)
+  // 3. hSet sentinel:alerts:by_target:{targetId}  (alertId → '1')
+  // 4. Append sentinel:audit_log entry  (keyed by alertId; idempotent)
+  // 5. Update dashboard pinned post  (debounced)
+  // 6. If severity === 'critical', send modmail  (dedup-keyed by alertId)
+  // 7. Set dispatchState: 'complete' on alert record
+  //
+  // Crash recovery: sentinel.every_5m.refresh_thread_health scans alerts
+  //   where dispatchState === 'pending' and replays steps 2–6.
 }
 ```
 
@@ -346,7 +413,7 @@ type SubSettings = {
   };
   // Advanced (collapsible UI section)
   advanced?: {
-    baselineWindowDays: number;          // default 14
+    // baselineWindowDays removed — M_max is a per-signal constant (see RollingStat)
     quietHours?: { start: number; end: number; timezone: string };
     exemptUsers: string[];
     exemptFlairs: string[];

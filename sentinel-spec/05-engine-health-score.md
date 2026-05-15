@@ -1,5 +1,13 @@
 # 05 · Health Score Engine
 
+## Changelog
+
+| Rev ID | Summary | Plan-review section |
+|---|---|---|
+| R-AFINN | Pin lexicon to AFINN-2015-en; add emoji extension table (~30 entries); specify token handling (case-fold, strip punctuation, sum scores, divide by token count, clamp to [−1,+1]); neutral fallback (0) for unknown tokens; note non-English degradation; make slow-mode velocity impact configurable via `SubSettings.advanced.slowModeVelocityImpact` (default 0.7); document pending E-SlowMode validation. | `00-plan-review.md` v4 § R-AFINN (Broken Assumption H) |
+
+---
+
 > Predicts which threads will need mod intervention 1–2 hours ahead. Continuously scores every active thread.
 
 ---
@@ -62,7 +70,22 @@ function sentimentSwing(thread: ThreadState): number {
 
 Strong signal when swing > 0.6 (e.g. started at +0.4, now at -0.2).
 
-**Sentiment computation**: lightweight lexicon-based sentiment scoring — no need for ML or external APIs. A simple word-list scorer (positive words +1, negative words -1, normalized) is enough at this fidelity. Use AFINN-style word lists.
+**Sentiment computation**: lightweight lexicon-based sentiment scoring — no need for ML or external APIs. Lexicon: **AFINN-2015-en** (pinned variant; do not substitute AFINN-111). Token handling: case-fold the input, strip punctuation, tokenize on whitespace, look up each token in the combined lexicon (AFINN-2015-en + emoji extension table below), sum scores, divide by token count, clamp result to [−1, +1]. Tokens not in either lexicon score 0 (neutral fallback — no unknown-word penalty). Non-English subs receive degraded sentiment accuracy; this is a known limitation of the AFINN lexicon.
+
+**Emoji extension table** (~30 entries, merged with AFINN-2015-en at lookup time):
+
+| Token | Score | Token | Score | Token | Score |
+|---|---|---|---|---|---|
+| 😀 | +3 | 😡 | −3 | 👍 | +2 |
+| 😂 | +2 | 🤬 | −4 | 👎 | −2 |
+| 😍 | +3 | 😤 | −2 | ❤️ | +3 |
+| 🥰 | +3 | 😒 | −2 | 💔 | −3 |
+| 😊 | +2 | 😑 | −1 | 🎉 | +3 |
+| 🙏 | +1 | 😢 | −2 | 😞 | −2 |
+| ✅ | +1 | ❌ | −2 | 💯 | +2 |
+| 😎 | +1 | 🤮 | −4 | 🌟 | +2 |
+| 👏 | +2 | 😠 | −3 | 🔥 | +1 |
+| 💀 | −2 | 🖕 | −4 | 😰 | −2 |
 
 ### Signal 3: New-account participation ratio
 
@@ -157,7 +180,7 @@ function calculateThreadRisk(thread: ThreadState, sub: SubBaseline): {
 Beyond current risk, Health Score projects forward.
 
 ```typescript
-function forecast(thread: ThreadState, currentRisk: number): {
+function forecast(thread: ThreadState, currentRisk: number, settings: SubSettings): {
   in1Hour: { risk: number; commentsExpected: number };
   in2Hours: { risk: number; commentsExpected: number };
   ifMitigated: { risk1h: number; risk2h: number };
@@ -169,8 +192,11 @@ function forecast(thread: ThreadState, currentRisk: number): {
   const projected1h = clamp(currentRisk + trajectory * 60, 0, 100);
   const projected2h = clamp(currentRisk + trajectory * 120, 0, 100);
 
-  // If slow mode were enabled (velocity drops 70%)
-  const mitigatedTrajectory = trajectory * 0.3;
+  // If slow mode were enabled — velocity reduction is configurable via
+  // SubSettings.advanced.slowModeVelocityImpact (default 0.7 = 70% reduction).
+  // Pending E-SlowMode empirical validation; adjust default if observed impact differs.
+  const slowModeImpact = settings.advanced.slowModeVelocityImpact ?? 0.7;
+  const mitigatedTrajectory = trajectory * (1 - slowModeImpact);
   const mitigated1h = clamp(currentRisk + mitigatedTrajectory * 60, 0, 100);
   const mitigated2h = clamp(currentRisk + mitigatedTrajectory * 120, 0, 100);
 
@@ -182,7 +208,7 @@ function forecast(thread: ThreadState, currentRisk: number): {
 }
 ```
 
-This produces the "Without intervention vs With slow mode" panel in the dashboard.
+This produces the "Without intervention vs With slow mode" panel in the dashboard. The `slowModeVelocityImpact` default (0.7) is a provisional assumption pending E-SlowMode empirical validation (see `sentinel-spec/research/09-runtime-probes.md`); if the measured velocity reduction differs from 70% by more than ±20%, update the default in `SubSettings.advanced`.
 
 ---
 

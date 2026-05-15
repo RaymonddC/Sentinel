@@ -1,0 +1,49 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px;font-family:'IBM Plex Sans',sans-serif}
+  .row{display:flex;gap:14px;align-items:stretch;margin-bottom:12px}
+  .row:last-child{margin-bottom:0}
+  .card{flex:1;background:var(--bg-canvas);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
+  .ex{color:var(--fg-0);font-size:14px;line-height:1.45}
+  .ex .mono{font-family:'JetBrains Mono',monospace;color:var(--fg-0)}
+  .ex .meta{color:var(--fg-2)}
+  .ex .sev{color:#e74c3c;font-weight:600}
+  .ex .conf{font-family:'JetBrains Mono',monospace;color:var(--fg-0);font-weight:500}
+  .ex .glyph{color:#f39c12}
+</style></head><body>
+<div class="row">
+  <div class="card">
+    <div class="label">Raid Radar headline</div>
+    <div class="ex" style="font-weight:600">Coordinated brigade detected</div>
+    <div class="ex">38 new accounts from r/external hit "[thread]" in 90 seconds. <span class="meta">Confidence</span> <span class="conf">89%.</span></div>
+  </div>
+</div>
+<div class="row">
+  <div class="card">
+    <div class="label">Memory headline · the ⚠ is load-bearing</div>
+    <div class="ex"><span class="glyph">⚠</span> <strong>POSSIBLE BAN EVADER</strong></div>
+    <div class="ex">Strong match to <span class="mono">u/old_handle_2024</span> <span class="meta">(banned Mar 14 for rule 2)</span></div>
+    <div class="ex meta">Behavioral 87% · Stylometry 94% · <span style="color:#f39c12">Combined 91%</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Health Score forecast</div>
+    <div class="ex" style="font-weight:600;color:#f39c12">78 (High) · ↑ Rising</div>
+    <div class="ex">Without intervention, projected to hit <span class="sev">95%</span> in 90 minutes.</div>
+    <div class="ex">With slow mode, predicted peak: <span style="color:#f5b041;font-family:'JetBrains Mono',monospace">51%</span>.</div>
+  </div>
+</div>
+<div class="row">
+  <div class="card">
+    <div class="label">Empty state · Threats</div>
+    <div class="ex" style="color:#46a973">✅ No active threats.</div>
+    <div class="ex meta">All engines are monitoring.</div>
+  </div>
+  <div class="card">
+    <div class="label">Modmail · bootstrap</div>
+    <div class="ex" style="font-weight:600">🛡 Sentinel is now active on r/[subname]</div>
+    <div class="ex meta">Hi mods, Sentinel is now active. Detection runs immediately…</div>
+  </div>
+</div>
+</body></html>

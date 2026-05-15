@@ -258,6 +258,164 @@ Notes: mode=plan. Must submit edit list before applying.
 Brief: Apply all revisions in `00-plan-review.md` targeting `07-onboarding-and-install.md` (primarily R-Bootstrap = 14d fetch → 3-pattern hybrid; Memory cold-start framing; calibration banner copy). Add `## Changelog` section. Plan-approval gated.
 Model/Effort: sonnet / medium
 Output location: `sentinel-spec/07-onboarding-and-install.md` (edit in place)
+Status: **alive — was waiting for plan approval (false alarm on "stuck")**
+Time: spawned 00:00 → idle (waiting plan_approval_response, not failed)
+Notes: My initial diagnosis was wrong — v1 wasn't dead, just blocked on plan-approval lock. User approved via UI; v1 woke up active. v2 retry made redundant — shutdown sent. Lesson: `isActive: False` alone does NOT mean failed-to-start; check for plan file presence and plan_approval_request in team-lead inbox before assuming dead.
+
+---
+
+## 2026-05-12 23:08 · Phase 2 Wave 2.1 — RESPAWNS (no plan-mode)
+
+After plan-mode deadlock on 02-v1 and 07-v1/v2, spawned **without** mode=plan with approved plans inlined / read from disk.
+
+- `spec-editor-02-architecture-v2` (sonnet/medium, no plan-mode): 13 edits applied; 02-architecture.md 12.3 KB → 18.6 KB; Changelog added. Done 23:18.
+- `spec-editor-07-onboarding-v3` (sonnet/medium, no plan-mode): 3 edits applied; 07-onboarding 8.2 KB → 9.6 KB; Changelog added. Done 23:17.
+
+3 zombies (02-v1, 07-v1, 07-v2) shutdown_requests sent — never processed (plan-mode locked); remain `isActive: True` in config but inert.
+
+---
+
+## 2026-05-12 23:25 · Phase 2 Wave 2.2 (3 engines, sonnet/medium, no plan-mode)
+
+- `spec-editor-03-raid-radar` — done 23:27. R-Sub-Overlap-Cap + cold-sub `||1` note applied.
+- `spec-editor-04-memory` — done 23:37. Mod Notes integration + cold-start framing + stylometry prep + sub-overlap cap + 5MB chunking applied.
+- `spec-editor-05-health-score` — done 23:28. AFINN-2015-en pin + slow-mode constant + cold-thread baseline applied.
+
+All 3 added Changelog blocks at top. No mismatches reported.
+
+---
+
+## 2026-05-13 · Phase 2 Wave 2.3 — 4 panes, sonnet/medium, no plan-mode
+
+Brief: Each spec-editor reads `00-plan-review.md` (already lead-approved), identifies revisions targeting its file, applies edits using Edit tool, adds Changelog at top. First action: SendMessage lead "alive". Reads target file + cited research files only as needed. No plan-approval gate.
+
+### W2.3a · spec-editor-06-dashboard-and-ui
+
+Revisions expected: cluster-graph lazy/cap (≤20 nodes per research/04 + plan-review), DOM budget note, sortset alerts:open pagination note if surfaced.
+Output: `sentinel-spec/06-dashboard-and-ui.md`
+Status: pending — Time: spawned ~now
+
+### W2.3b · spec-editor-08-build-plan
+
+Revisions expected: Phase 0 empirical spike retargeted (Q6 scheduler timeout + Q7 throttle + slow-mode velocity + trigram latency + createdAt field probe + custom-post DOM count), scope-cut governance note per PRI-3.
+Output: `sentinel-spec/08-build-plan.md`
+Status: pending — Time: spawned ~now
+
+### W2.3c · spec-editor-09-demo-video-script
+
+Revisions expected: R-Demo-Honest-Framing — calibrated test-sub framing, formal pre-seeding checklist, Memory-cold-start prerequisite per PRI-2.
+Output: `sentinel-spec/09-demo-video-script.md`
+Status: pending — Time: spawned ~now
+
+### W2.3d · spec-editor-10-app-listing
+
+Revisions expected: R-Competitive-Cleanup — strike unsourced 72% adoption stat, add verbatim Ban Evasion Filter quote ("doesn't filter based on post or comment context").
+Output: `sentinel-spec/10-app-listing.md`
+Status: pending — Time: spawned ~now
+
+---
+
+## 2026-05-13 21:12 · Phase 2 Wave 2.3 — COMPLETION
+
+All 4 done. File sizes (modified 21:10–21:12):
+- 06-dashboard-and-ui.md: 11.3 KB
+- 08-build-plan.md: 14.4 KB
+- 09-demo-video-script.md: 8.9 KB
+- 10-app-listing.md: 10.2 KB
+
+---
+
+## 2026-05-13 21:15 · Phase 2 Wave 2.4 · spec-summarizer-v2 (refresh)
+
+Brief: Re-read all 10 Wave-2-revised spec files + CLAUDE.md + 01-product-decisions.md. Overwrite `sentinel-spec/00-architectural-summary.md` to reflect all current state: new bootstrap mechanism (P1/P2/P3 hybrid), Welford-with-decay rolling-stat semantics, no-Sets primitive note, 5MB write cap, banned-index per-user restructure, Mod Notes integration, AFINN variant pin, demo realism honest framing. Preserve format/structure of original summary.
+Model/Effort: sonnet / medium
+Output location: `sentinel-spec/00-architectural-summary.md` (overwrite)
+Status: pending — Time: spawned 21:15 →
+Notes: No plan-mode. First action: SendMessage lead "alive". Last task of Phase 2.
+
+---
+
+## 2026-05-13 21:30 · PHASE 2 CLOSED · PHASE 4 STARTED
+
+All 10 spec files revised. Summary refreshed (16.5 KB, was ~12 KB).
+
+User chose Phase 4 (Design briefs) before Phase 3 (Ultraplan) — Phase 4 has user-side bottleneck (Claude.ai work) so front-loading. Phase 3 will run after.
+
+Sent shutdown_request to all 26 non-zombie teammates (3 plan-mode zombies stay listed but inert). Spawning `design-briefs-writer` (sonnet/high, no plan-mode) for `sentinel-spec/12-design-briefs.md`.
+
+## 2026-05-13 21:30 · Phase 4 · design-briefs-writer
+
+Brief: Identify every screen, component, and visual interaction Sentinel needs. Output structured design briefs (Brief #N format per lead's brief). User takes to Claude.ai for HTML mockups.
+Model/Effort: sonnet / high
+Output location: `sentinel-spec/12-design-briefs.md`
+Status: pending — Time: spawned 21:30 →
+Notes: No plan-mode. First action: SendMessage "alive".
+
+## 2026-05-13 21:35 · Phase 3 · ultraplan-writer (parallel with Phase 4)
+
+Brief: Day-by-day build schedule from 2026-05-13 → 2026-06-27 deadline (~45 days). Dependency graph between tasks. Parallel-work opportunities. Buffer days. Daily check-in points. Full file structure (every TS file to create + order). Test scenarios per milestone. Pre-coded snippets for repetitive patterns.
+Model/Effort: opus / high
+Output location: `sentinel-spec/11-ultraplan.md`
+Status: pending — Time: spawned 21:35 →
+Notes: No plan-mode. Runs parallel with Phase 4 (independent outputs). First action: SendMessage "alive".
+
+---
+
+## 2026-05-14 21:00 · SESSION-DROP RECOVERY
+
+User's session dropped ~2026-05-13 21:35, killing `design-briefs-writer` (Phase 4) and `ultraplan-writer` (Phase 3) mid-run. Both showed `isActive: True` 23h later with zero output — confirmed zombies. Respawned both as v2 below.
+
+## 2026-05-14 21:00 · Phase 4 (retry) · design-briefs-writer-v2
+
+Brief: same as original design-briefs-writer — identify every screen/component/interaction, output structured briefs at `sentinel-spec/12-design-briefs.md`.
+Model/Effort: sonnet / high
+Status: pending — Time: spawned 21:00 →
+
+## 2026-05-14 21:00 · Phase 3 (retry) · ultraplan-writer-v2
+
+Brief: same as original ultraplan-writer — day-by-day build schedule at `sentinel-spec/11-ultraplan.md`.
+Model/Effort: opus / high
+Status: accepted — 11-ultraplan.md 66.7 KB, 12-design-briefs.md 39.5 KB (25 briefs). Both done ~21:08.
+
+## 2026-05-14 21:50 · Phase 4 support · style-guide-writer
+
+Brief: Consolidate scattered visual rules from 06-dashboard-and-ui.md + engine specs into one dense paste-ready `sentinel-spec/13-visual-style-guide.md`. User pastes this into every Claude.ai mockup convo as the consistency anchor.
+Model/Effort: sonnet / medium
+Output location: `sentinel-spec/13-visual-style-guide.md`
+Status: accepted — 15 KB written 2026-05-14 22:01
+Notes: Used as input to claude.ai/design which produced the full design bundle (see Phase 4 artifact entry below).
+
+---
+
+## 2026-05-15 12:40 · PHASE 4 ARTIFACT RECEIVED
+
+User completed claude.ai/design iteration. Bundle fetched from anthropic API and integrated at `/mnt/d/raymond/Documents/DESKTOP/Projects/Sentinel/design/`.
+
+**Contents:**
+- `design/README.md` — handoff bundle pointer (for coding agents in Phase 5)
+- `design/chats/chat1.md` — full design iteration transcript (775 lines)
+- `design/project/README.md` — design system spec (palette, type, density, content fundamentals, iconography)
+- `design/project/colors_and_type.css` — CSS token system
+- `design/project/preview/*.html` — 27 component preview cards
+- `design/project/ui_kits/sentinel-dashboard/` — JSX component prototypes + interactive index.html
+- `design/project/assets/logo.svg` + `mark.svg` — placeholder lockup
+
+**Coverage:** all 25 briefs from `12-design-briefs.md` covered. 5-tab structure (Threats/Users/Threads/Activity/Settings) confirmed; kit README is stale (says 4 tabs) but the actual implementation has 5.
+
+**Substitutions accepted:** IBM Plex Sans + JetBrains Mono fonts, Lucide icons (1.5px), placeholder logo, neutral palette derived from severity hues, accent blue `#5b8def` for focus + primary button.
+
+**Open chat questions** (lead decisions logged for Phase 5):
+- Signal-weight Save validation: BLOCK Save when Σ ≠ 100, add a "Normalize to 100" button next to the indicator
+- `Slider.jsx` unused: KEEP — Phase 5 may surface it; don't churn
+- Watch-only flair filter: separate chip list (not shared with exempt-flairs) — simpler mental model
+
+**Phase 5 unblock status:** designs ready; build can start per `11-ultraplan.md` Day 1.
+
+## 2026-05-12 21:55 · Phase 2 Wave 2.1 · spec-editor-07-onboarding-v2
+
+Brief: same as v1 — apply revisions in `00-plan-review.md` targeting `07-onboarding-and-install.md`.
+Model/Effort: sonnet / medium
+Output location: `sentinel-spec/07-onboarding-and-install.md` (edit in place)
 Status: pending — plan-approval required
-Time: spawned 00:00 →
-Notes: mode=plan.
+Time: spawned 21:55 →
+Notes: Retry. mode=plan. Failure-mitigation: brief explicitly tells teammate to SendMessage lead immediately if any step fails.

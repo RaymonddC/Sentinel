@@ -1,0 +1,24 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .swatch{background:var(--bg-canvas);border-radius:var(--radius-md);overflow:hidden;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .preview-stack{height:46px;background:var(--bg-panel);border-radius:6px;display:flex;align-items:center;padding:0 14px;color:var(--fg-1);font-size:13px;font-family:var(--font-mono)}
+  .name{font-size:12px;color:var(--fg-0);font-weight:500}
+  .hex{font-family:var(--font-mono);font-size:11px;color:var(--fg-2)}
+</style></head><body>
+<div class="grid">
+  <div class="swatch">
+    <div class="preview-stack" style="border:1px solid #2b3138">default</div>
+    <div><div class="name">--border</div><div class="hex">#2b3138 · 1px hairline</div></div>
+  </div>
+  <div class="swatch">
+    <div class="preview-stack" style="border:1px solid #3a4148">strong</div>
+    <div><div class="name">--border-strong</div><div class="hex">#3a4148 · at-a-glance</div></div>
+  </div>
+  <div class="swatch">
+    <div class="preview-stack" style="border:1px solid #1f242a">subtle</div>
+    <div><div class="name">--border-subtle</div><div class="hex">#1f242a · inside-card</div></div>
+  </div>
+</div>
+</body></html>

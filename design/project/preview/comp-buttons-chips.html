@@ -1,0 +1,41 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px;display:flex;flex-direction:column;gap:14px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .lab{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-2);min-width:80px}
+  .btn{font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:500;border-radius:6px;border:1px solid transparent;padding:0 12px;height:32px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+  .btn-primary{background:#5b8def;color:#0b0d0f;font-weight:600}
+  .btn-primary:hover{background:#6f9bf2}
+  .btn-secondary{background:#1b1f23;color:#e6e9ed;border-color:#2b3138}
+  .btn-secondary:hover{background:#22272d}
+  .btn-ghost{background:transparent;color:#aab2bd}
+  .btn-ghost:hover{background:#1b1f23}
+  .btn-small{height:28px;font-size:12px;padding:0 10px}
+  .btn-large{height:40px;font-size:14px;padding:0 16px}
+  .chip{font-family:'IBM Plex Sans',sans-serif;font-size:12px;height:28px;padding:0 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--fg-1);display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+  .chip:hover{background:var(--bg-raised)}
+  .chip.active{background:var(--bg-raised-2);color:var(--fg-0);border-color:var(--border-strong);font-weight:500}
+  .chip .count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-2);padding-left:4px}
+  .chip.active .count{color:var(--fg-0)}
+</style></head><body>
+<div class="row"><span class="lab">primary</span>
+  <button class="btn btn-primary btn-small">Small</button>
+  <button class="btn btn-primary">Review cluster</button>
+  <button class="btn btn-primary btn-large">Take action</button>
+</div>
+<div class="row"><span class="lab">secondary</span>
+  <button class="btn btn-secondary btn-small">Archive</button>
+  <button class="btn btn-secondary">Modmail mods</button>
+</div>
+<div class="row"><span class="lab">ghost</span>
+  <button class="btn btn-ghost btn-small">Mark reviewed</button>
+  <button class="btn btn-ghost">Dismiss</button>
+</div>
+<div class="row" style="margin-top:6px;border-top:1px solid var(--border-subtle);padding-top:14px"><span class="lab">chips</span>
+  <span class="chip active">All</span>
+  <span class="chip">Critical <span class="count">2</span></span>
+  <span class="chip">High <span class="count">1</span></span>
+  <span class="chip">Medium <span class="count">1</span></span>
+</div>
+</body></html>

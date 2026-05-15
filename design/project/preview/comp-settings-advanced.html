@@ -1,0 +1,71 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:18px;display:flex;flex-direction:column;gap:14px;font-family:'IBM Plex Sans',sans-serif}
+  .section{background:var(--bg-canvas);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
+  .engine{font-size:13px;color:var(--fg-0);font-weight:500;margin-bottom:4px}
+  .cb-row{display:flex;align-items:center;gap:10px;padding:6px 0}
+  .cb{width:18px;height:18px;border-radius:4px;border:1px solid #5b8def;background:#5b8def;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#0b0d0f;font-size:12px;font-weight:bold}
+  .cb.off{background:var(--bg-canvas);color:transparent;border-color:var(--border-strong)}
+  .cb-label{flex:1}
+  .cb-t{font-size:13px;color:var(--fg-0);font-weight:500}
+  .cb-h{font-size:12px;color:var(--fg-2);margin-top:2px}
+  .num{display:inline-flex;align-items:center;gap:4px;background:var(--bg-canvas);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--fg-0)}
+  .memory-box{padding:10px 12px;background:var(--bg-canvas);border:1px dashed var(--border);border-radius:6px}
+  .memory-box .t{font-size:13px;color:var(--fg-0);font-weight:500;margin-bottom:2px}
+  .memory-box .h{font-size:12px;color:var(--fg-2)}
+  .weights{display:flex;flex-direction:column;gap:6px}
+  .weight-row{display:grid;grid-template-columns:1fr 80px;align-items:center;gap:12px}
+  .weight-row span{font-size:13px;color:var(--fg-1)}
+  .weight-total{font-family:'JetBrains Mono',monospace;font-size:12px;color:#46a973}
+  .weight-head{display:flex;justify-content:space-between;align-items:baseline}
+  .weight-head .t{font-size:13px;color:var(--fg-0);font-weight:500}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{background:var(--bg-canvas);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+  .stat-l{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2);margin-bottom:4px}
+  .stat-v{font-family:'JetBrains Mono',monospace;font-size:17px;color:var(--fg-0);font-weight:500}
+</style></head><body>
+
+<div class="section">
+  <div class="eyebrow">Auto-actions</div>
+  <div class="engine">Raid Radar</div>
+  <div class="cb-row">
+    <span class="cb">✓</span>
+    <div class="cb-label"><div class="cb-t">Auto-enable slow mode</div><div class="cb-h">at confidence > 0.85</div></div>
+    <span class="num">0.85</span>
+  </div>
+  <div class="cb-row">
+    <span class="cb">✓</span>
+    <div class="cb-label"><div class="cb-t">Auto-filter new accounts</div><div class="cb-h">at confidence > 0.85</div></div>
+    <span class="num">0.85</span>
+  </div>
+  <div class="memory-box">
+    <div class="t">Memory</div>
+    <div class="h">No auto-actions available — Memory always suggests, never acts.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="weight-head">
+    <span class="t">Raid Radar signal weights</span>
+    <span class="weight-total">✓ 100%</span>
+  </div>
+  <div class="weights">
+    <div class="weight-row"><span>Velocity</span><span class="num">30 %</span></div>
+    <div class="weight-row"><span>Age cluster</span><span class="num">25 %</span></div>
+    <div class="weight-row"><span>Subreddit overlap</span><span class="num">20 %</span></div>
+    <div class="weight-row"><span>Sync (timing)</span><span class="num">25 %</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="eyebrow">Calibration health</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-l">Total alerts (7d)</div><div class="stat-v">47</div></div>
+    <div class="stat"><div class="stat-l">False positive rate</div><div class="stat-v">8%</div></div>
+    <div class="stat"><div class="stat-l">Mod actions taken</div><div class="stat-v">31</div></div>
+  </div>
+</div>
+
+</body></html>

@@ -1,0 +1,25 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:20px;font-family:'IBM Plex Sans',sans-serif}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .tile{background:var(--bg-canvas);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .glyph{font-family:'IBM Plex Sans',sans-serif;font-size:36px;line-height:1}
+  .name{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-2)}
+  .where{font-size:12px;color:var(--fg-1);line-height:1.4;max-width:180px}
+  .g-brand{color:var(--fg-0)}
+  .g-warn{color:#f39c12}
+  .g-ok  {color:#46a973}
+  .g-info{color:#5b8def}
+  .g-check{color:#e74c3c}
+  .g-arrow{color:var(--fg-1)}
+</style></head><body>
+<div class="grid">
+  <div class="tile"><div class="glyph g-brand">🛡</div><div class="name">brand mark</div><div class="where">Only in transactional modmail subject lines.</div></div>
+  <div class="tile"><div class="glyph g-warn">⚠</div><div class="name">ban-evader</div><div class="where">Memory alert headline only.</div></div>
+  <div class="tile"><div class="glyph g-ok">✅</div><div class="name">all clear</div><div class="where">Empty states with positive sentiment (Threats).</div></div>
+  <div class="tile"><div class="glyph g-info">ℹ</div><div class="name">informational</div><div class="where">System banners — calibration, demo mode.</div></div>
+  <div class="tile"><div class="glyph g-check">✓</div><div class="name">signal pill</div><div class="where">Inside an alert card, confirming one signal contributed.</div></div>
+  <div class="tile"><div class="glyph g-arrow">↑↓</div><div class="name">trend</div><div class="where">Direction of a metric — risk score, KPI deltas.</div></div>
+</div>
+</body></html>

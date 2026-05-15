@@ -1,5 +1,14 @@
 # 07 · Onboarding and Install
 
+## Changelog
+
+### 2026-05-12 — Phase 2 spec revisions applied (per `00-plan-review.md` v4)
+- R-Bootstrap: 14-day fetch replaced with 3-pattern hybrid (P1 top-1000 hot at install + P2 reactive from t=0 + P3 progressive scheduled backfill during 7-day ramp); welcome modal copy and Step 4 modmail copy updated accordingly; per `00-plan-review.md` § R-Bootstrap and Broken Assumption A
+- PRI-1 Q12 mechanism revised; principle "live from minute one" preserved
+- R-Memory-Cold-Start / PRI-4: Memory cold-start framing added to welcome modal ("Memory activates the first time you ban a user; accuracy improves as your ban history grows."); per `00-plan-review.md` § R-Memory-Cold-Start and PRI-4
+
+---
+
 > What happens in the first 5 minutes after a mod hits "Install Sentinel." This window determines whether the tool gets used or uninstalled.
 
 ---
@@ -18,9 +27,11 @@ A Devvit-rendered welcome screen appears in the sub. Single screen, three sectio
 ┌──────────────────────────────────────────────────────────┐
 │ 👋 Welcome to Sentinel                                    │
 ├──────────────────────────────────────────────────────────┤
-│ Sentinel is now scanning your sub's last 14 days of      │
-│ activity to learn what "normal" looks like. This takes   │
-│ about 2 minutes and runs in the background.              │
+│ Scanning your sub's recent activity to seed your         │
+│ baseline. Detection is active immediately; accuracy      │
+│ improves over the next 7 days.                           │
+│ Memory activates the first time you ban a user;          │
+│ accuracy improves as your ban history grows.             │
 │                                                          │
 │ ─────────────────────────────────────────────            │
 │                                                          │
@@ -53,21 +64,25 @@ Default = Medium sensitivity, auto-actions off, both alert channels on.
 
 After mod clicks "Get started":
 
-1. Schedule a one-time job: `bootstrapBaseline(subId)`
+1. Schedule `bootstrapBaseline(subId)` (P1 hot-list seed + P3 backfill kickoff)
 2. Show a "Setup in progress" message immediately
 
-The bootstrap job:
-1. Fetches the sub's last 14 days of posts (paginated, max 1000 posts)
-2. Fetches each post's top 100 comments
-3. Runs all events through the standard ingestion module
-4. Builds initial `SubBaseline`, `UserFingerprint`, `ThreadState` records
-5. Marks `baseline.bootstrapComplete = true`
-6. Posts the dashboard custom post and pins it
-7. Notifies mods via modmail: "Sentinel is ready"
+Bootstrap uses a three-pattern hybrid to stay within Reddit's ~60 req/min OAuth rate limit:
 
-Estimated time: 2–10 minutes depending on sub activity.
+- **P1 — Hot-list seed (at install):** Fetches the sub's top-1000 hot posts and indexes them into initial `SubBaseline` + `UserFingerprint` records. Keeps install-time API calls under ~50.
+- **P2 — Reactive from t=0:** All engines evaluate every incoming event immediately, with no dependency on P1 completing.
+- **P3 — Progressive backfill (7-day ramp):** A scheduled hourly job fills the historical gap in rate-limit-safe batches (≤50 API calls per child job, within the 60 runJob/min ceiling).
 
-**Critical:** Bootstrap is non-blocking. Sentinel's engines start working immediately on new events even before bootstrap completes — they just have less baseline data initially.
+The bootstrap job steps:
+1. Fetch top-1000 hot posts; build initial `SubBaseline` + `UserFingerprint` records (P1)
+2. Schedule the hourly progressive-backfill job for the 7-day ramp (P3)
+3. Mark `baseline.bootstrapComplete = true`
+4. Post the dashboard custom post and pin it
+5. Notify mods via modmail: "Sentinel is active"
+
+Estimated time for P1: under 2 minutes. P3 backfill continues in the background throughout the 7-day calibration ramp.
+
+**Critical:** Bootstrap is non-blocking. Sentinel's engines run reactively on every new event from t=0 (P2) — they operate with progressively more baseline data as P1 and P3 complete.
 
 ### Step 4 — "Sentinel is ready" message
 
@@ -78,10 +93,7 @@ Subject: 🛡️ Sentinel is now active on r/yoursub
 
 Hi mods,
 
-Sentinel finished its initial scan of your sub. We've:
-  • Profiled 1,247 active commenters
-  • Catalogued 47 active threads
-  • Established baseline activity patterns
+Sentinel is now active. Detection runs immediately; accuracy improves over the next 7 days as your baseline warms up.
 
 Your dashboard is now pinned at the top of the sub:
   https://reddit.com/r/yoursub/comments/abc123/sentinel_dashboard

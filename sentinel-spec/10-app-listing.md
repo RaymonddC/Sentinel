@@ -4,6 +4,14 @@
 
 ---
 
+## Changelog
+
+| Rev | Summary | Citation |
+|---|---|---|
+| R-Competitive-Cleanup | Checked for "72% Harassment Filter adoption" claim — not found in file (already absent; stat has no verifiable public source). Added verbatim Reddit Ban Evasion Filter quote as Memory positioning anchor in § Description (Memory paragraph). | `00-plan-review.md` v4 R-Competitive-Cleanup; `research/07` § Adoption Reality + § Ban Evasion Filter |
+
+---
+
 ## Listing structure
 
 Devvit App Directory listings have:
@@ -64,6 +72,13 @@ database of previously-banned users — using both behavioral signals (posting
 times, sub overlap) and writing-style features (n-grams, punctuation, emoji
 preferences). Catches ban evaders that change their schedule or vocabulary
 but can't disguise their unconscious writing patterns.
+
+Reddit's own Ban Evasion Filter help page states: "the ban evasion filter
+doesn't filter based on post or comment context (i.e. this tool doesn't use
+behavioral or contextual patterns)." Memory fills exactly this gap — it
+matches writing style and behavioral patterns that Reddit's native filter
+architecturally cannot.
+([Reddit Help](https://support.reddithelp.com/hc/en-us/articles/15484544471444-Ban-evasion-filter))
 
 **Health Score** continuously monitors every active thread, predicting which
 ones will need mod intervention 1–2 hours ahead. Combines velocity, sentiment

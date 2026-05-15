@@ -1,0 +1,246 @@
+/* ============================================================
+   Sentinel Design System — tokens
+   Dark-mode-first. Severity colors are reserved (CRITICAL/HIGH/
+   MEDIUM/HEALTHY only). Light mode is a fallback, not co-equal.
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  /* ----- COLOR : surfaces (dark canvas → raised) ----- */
+  --bg-canvas:    #0b0d0f;   /* page background, the Reddit feed area */
+  --bg-panel:     #14171a;   /* the custom post itself, alert rows */
+  --bg-raised:    #1b1f23;   /* hover, active tab, KPI tiles */
+  --bg-raised-2:  #22272d;   /* pressed, focused, deepest stack */
+
+  /* ----- COLOR : borders ----- */
+  --border:          #2b3138;   /* default 1px hairline */
+  --border-strong:   #3a4148;   /* divider that needs to read at a glance */
+  --border-subtle:   #1f242a;   /* inside-card divider — almost invisible */
+
+  /* ----- COLOR : text ----- */
+  --fg-0:   #e6e9ed;   /* primary — headlines, KPI numbers */
+  --fg-1:   #aab2bd;   /* secondary — body, labels */
+  --fg-2:   #6e7681;   /* tertiary — meta, timestamps */
+  --fg-3:   #4a5159;   /* disabled, placeholder */
+  --fg-inv: #0b0d0f;   /* inverse — text on a severity-filled button */
+
+  /* ----- COLOR : severity (THE ONLY hue tokens) ----- */
+  --sev-critical:  #e74c3c;
+  --sev-high:      #f39c12;
+  --sev-medium:    #f5b041;
+  --sev-healthy:   #46a973;
+
+  /* Tints — used for the alert-row left wash and severity backgrounds.
+     8% alpha against bg-panel reads as a quiet shaded row, not a banner. */
+  --tint-critical: rgba(231, 76, 60,  0.10);
+  --tint-high:     rgba(243, 156, 18, 0.10);
+  --tint-medium:   rgba(245, 176, 65, 0.08);
+  --tint-healthy:  rgba(70, 169, 115, 0.10);
+
+  /* Ring tints — used for the severity badge border. 28% reads at 12px. */
+  --ring-critical: rgba(231, 76, 60,  0.32);
+  --ring-high:     rgba(243, 156, 18, 0.32);
+  --ring-medium:   rgba(245, 176, 65, 0.28);
+  --ring-healthy:  rgba(70, 169, 115, 0.32);
+
+  /* ----- COLOR : accent (interactive only) ----- */
+  --accent:        #5b8def;   /* primary button fill, focus ring */
+  --accent-hover:  #6f9bf2;
+  --accent-press:  #4a7cd9;
+
+  /* ----- TYPE : families ----- */
+  --font-sans:    "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ----- TYPE : sizes (mobile-first; desktop is the same — Devvit) ----- */
+  --fs-11:  11px;   /* badge text, eyebrows                      */
+  --fs-12:  12px;   /* meta, timestamps                          */
+  --fs-13:  13px;   /* body small, label                         */
+  --fs-14:  14px;   /* body — DEFAULT                            */
+  --fs-15:  15px;   /* lifted body, dense headers                */
+  --fs-17:  17px;   /* card title                                */
+  --fs-20:  20px;   /* KPI value (small tile)                    */
+  --fs-24:  24px;   /* KPI value (default tile)                  */
+  --fs-32:  32px;   /* hero number (Health Score gauge center)   */
+
+  /* ----- TYPE : weights ----- */
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+
+  /* ----- TYPE : line-heights ----- */
+  --lh-tight:   1.15;   /* numbers, headlines */
+  --lh-snug:    1.30;   /* card titles */
+  --lh-body:    1.45;   /* paragraphs, alert headlines that wrap */
+
+  /* ----- TYPE : letter-spacing ----- */
+  --tracking-caps:   0.06em;   /* CRITICAL, HIGH, tab labels */
+  --tracking-tight:  -0.01em;  /* large numbers */
+
+  /* ----- SPACING : 4px base grid ----- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ----- RADIUS ----- */
+  --radius-sm: 6px;     /* chips, inputs, small buttons */
+  --radius-md: 10px;    /* cards, KPI tiles, alert rows */
+  --radius-lg: 14px;    /* the outermost custom-post wrapper */
+  --radius-pill: 999px; /* severity capsules, avatars */
+
+  /* ----- SHADOW (used sparingly — Devvit-friendly) ----- */
+  --shadow-1: 0 1px 0 rgba(0,0,0,0.40);  /* tab indicator only */
+
+  /* ----- TARGETS ----- */
+  --touch-min:        44px;   /* Apple HIG minimum, enforced */
+  --row-alert:        64px;   /* alert row, mobile */
+  --row-alert-dense:  56px;   /* alert row, desktop */
+  --row-kpi:          88px;   /* KPI tile */
+  --row-tab:          44px;   /* tab bar height */
+
+  /* ----- MOTION ----- */
+  --ease-out:  cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-in:   cubic-bezier(0.55, 0.05, 0.85, 0.40);
+  --dur-fast:  80ms;     /* exit, dismiss */
+  --dur-base:  120ms;    /* enter, hover */
+  --dur-pulse: 1200ms;   /* severity-escalation pulse (once, then stops) */
+}
+
+/* ============================================================
+   Light-mode fallback. Lower priority than dark; only used when
+   the host page explicitly sets [data-theme="light"] OR
+   prefers-color-scheme is light AND the host hasn't pinned dark.
+   Kept short — this is not a co-equal theme.
+   ============================================================ */
+:root[data-theme="light"] {
+  --bg-canvas:    #f6f7f8;
+  --bg-panel:     #ffffff;
+  --bg-raised:    #f0f2f4;
+  --bg-raised-2:  #e6e9ec;
+  --border:       #d8dde2;
+  --border-strong:#bcc4cc;
+  --border-subtle:#ebeef1;
+  --fg-0: #14171a;
+  --fg-1: #4a5159;
+  --fg-2: #6e7681;
+  --fg-3: #a6adb4;
+  --fg-inv: #ffffff;
+  --tint-critical: rgba(231, 76, 60,  0.08);
+  --tint-high:     rgba(243, 156, 18, 0.10);
+  --tint-medium:   rgba(245, 176, 65, 0.10);
+  --tint-healthy:  rgba(70, 169, 115, 0.10);
+}
+
+/* ============================================================
+   SEMANTIC primitives — use these in components instead of
+   composing tokens by hand. If a rule is missing, add it here
+   rather than in a component file.
+   ============================================================ */
+
+html, body {
+  background: var(--bg-canvas);
+  color: var(--fg-0);
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Typography roles */
+.t-eyebrow {
+  font-size: var(--fs-11);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.t-meta {
+  font-size: var(--fs-12);
+  color: var(--fg-2);
+}
+.t-label {
+  font-size: var(--fs-13);
+  color: var(--fg-1);
+}
+.t-body {
+  font-size: var(--fs-14);
+  color: var(--fg-0);
+  line-height: var(--lh-body);
+}
+.t-body-secondary {
+  font-size: var(--fs-14);
+  color: var(--fg-1);
+  line-height: var(--lh-body);
+}
+.t-card-title {
+  font-size: var(--fs-17);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  color: var(--fg-0);
+  letter-spacing: -0.005em;
+}
+.t-kpi {
+  font-size: var(--fs-24);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-0);
+  font-variant-numeric: tabular-nums;
+}
+.t-hero {
+  font-size: var(--fs-32);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-0);
+  font-variant-numeric: tabular-nums;
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  color: var(--fg-1);
+}
+
+/* Generic semantic elements (so plain markup looks right) */
+h1, h2, h3, h4 { margin: 0; color: var(--fg-0); font-weight: var(--fw-semibold); }
+h1 { font-size: var(--fs-24); line-height: var(--lh-snug); letter-spacing: -0.01em; }
+h2 { font-size: var(--fs-20); line-height: var(--lh-snug); }
+h3 { font-size: var(--fs-17); line-height: var(--lh-snug); }
+h4 { font-size: var(--fs-15); line-height: var(--lh-snug); color: var(--fg-1); }
+p  { margin: 0; color: var(--fg-1); line-height: var(--lh-body); }
+code, kbd, samp { font-family: var(--font-mono); font-size: 0.92em; }
+
+/* Severity helpers — only place these classes near a severity surface. */
+.sev-critical { color: var(--sev-critical); }
+.sev-high     { color: var(--sev-high); }
+.sev-medium   { color: var(--sev-medium); }
+.sev-healthy  { color: var(--sev-healthy); }
+
+.sev-bg-critical { background: var(--tint-critical); }
+.sev-bg-high     { background: var(--tint-high); }
+.sev-bg-medium   { background: var(--tint-medium); }
+.sev-bg-healthy  { background: var(--tint-healthy); }
+
+/* Focus ring — applied universally; never restyled per component. */
+:where(button, a, [role="button"], [role="tab"], input, select):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Reduced motion — disable everything except severity color flash. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

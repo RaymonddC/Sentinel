@@ -1,0 +1,39 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:20px;display:flex;flex-direction:column;gap:12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .lab{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-2);min-width:90px}
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 6px;border-radius:999px;border:1px solid;font-size:11px;font-weight:500;line-height:1;font-family:'IBM Plex Sans',sans-serif}
+  .check{font-size:10px}
+  .p-crit{background:rgba(231,76,60,.10);border-color:rgba(231,76,60,.32);color:#e74c3c}
+  .p-high{background:rgba(243,156,18,.10);border-color:rgba(243,156,18,.32);color:#f39c12}
+  .p-med {background:rgba(245,176,65,.08);border-color:rgba(245,176,65,.28);color:#f5b041}
+  .p-off {background:transparent;border-color:#2b3138;color:#4a5159}
+</style></head><body>
+
+<div class="row"><span class="lab">CRITICAL · 4 of 4</span>
+  <span class="pill p-crit"><span class="check">✓</span>velocity</span>
+  <span class="pill p-crit"><span class="check">✓</span>age cluster</span>
+  <span class="pill p-crit"><span class="check">✓</span>overlap</span>
+  <span class="pill p-crit"><span class="check">✓</span>sync</span>
+</div>
+
+<div class="row"><span class="lab">HIGH · 3 of 4</span>
+  <span class="pill p-high"><span class="check">✓</span>velocity</span>
+  <span class="pill p-off"><span class="check" style="opacity:.4">✓</span>age cluster</span>
+  <span class="pill p-high"><span class="check">✓</span>overlap</span>
+  <span class="pill p-high"><span class="check">✓</span>sync</span>
+</div>
+
+<div class="row"><span class="lab">MEDIUM · 1 of 4</span>
+  <span class="pill p-off"><span class="check" style="opacity:.4">✓</span>velocity</span>
+  <span class="pill p-med"><span class="check">✓</span>age cluster</span>
+  <span class="pill p-off"><span class="check" style="opacity:.4">✓</span>overlap</span>
+  <span class="pill p-off"><span class="check" style="opacity:.4">✓</span>sync</span>
+</div>
+
+<div style="font-size:11px;color:var(--fg-2);margin-top:6px;padding-top:10px;border-top:1px solid var(--border-subtle);font-family:'JetBrains Mono',monospace">
+  pills inherit alert severity · greyed-out pills mean signal not present
+</div>
+</body></html>

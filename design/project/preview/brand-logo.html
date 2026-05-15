@@ -1,0 +1,23 @@
+<!doctype html><html><head>
+<meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body{padding:24px;display:flex;flex-direction:column;gap:20px;align-items:flex-start}
+  .row{display:flex;gap:18px;align-items:center}
+  .swatch{background:var(--bg-canvas);border:1px solid var(--border);border-radius:10px;padding:18px 22px;display:flex;align-items:center;gap:14px}
+  .label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-2)}
+</style></head><body>
+<div class="row">
+  <div class="swatch"><img src="../assets/logo.svg" height="32" alt="Sentinel"></div>
+  <span class="label">logo · primary</span>
+</div>
+<div class="row">
+  <div class="swatch" style="background:#f6f7f8;border-color:#d8dde2"><img src="../assets/logo.svg" height="32" alt="Sentinel" style="filter:invert(1) hue-rotate(180deg)"></div>
+  <span class="label">logo · light surface (inverted)</span>
+</div>
+<div class="row">
+  <div class="swatch"><img src="../assets/mark.svg" width="40" height="40" alt="mark"></div>
+  <div class="swatch"><img src="../assets/mark.svg" width="28" height="28" alt="mark"></div>
+  <div class="swatch"><img src="../assets/mark.svg" width="20" height="20" alt="mark"></div>
+  <span class="label">mark · 40 / 28 / 20</span>
+</div>
+</body></html>
