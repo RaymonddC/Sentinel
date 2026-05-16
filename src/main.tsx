@@ -8,11 +8,12 @@ import { rollupBaseline } from './scheduler/rollup-baseline.js';
 import { gcAuditLog } from './scheduler/gc-audit-log.js';
 import { purgeInactiveUsers } from './scheduler/purge-inactive.js';
 import { backfillJob } from './scheduler/backfill-job.js';
+import { probeSchedulerTimeout } from './scheduler/probe-scheduler-timeout.js';
 import { defaultSettings } from './types/settings.js';
 import { k } from './storage/keys.js';
 import { registerMenuItems } from './menu/items.js';
 
-Devvit.configure({ redis: true, redditAPI: true, modLog: true, http: false });
+Devvit.configure({ redis: true, redditAPI: true, http: false });
 
 // Devvit-level app settings (the small set the install dialog needs).
 Devvit.addSettings([
@@ -38,6 +39,7 @@ Devvit.addSettings([
 Devvit.addCustomPostType({
   name: 'Sentinel Dashboard',
   description: 'Moderation intelligence — pinned dashboard for the mod team.',
+  height: 'tall',
   render: Dashboard,
 });
 
@@ -209,6 +211,16 @@ Devvit.addSchedulerJob({
   onRun: async (event, context) => {
     const subName = (event.data?.['subredditName'] as string) ?? context.subredditName ?? '';
     await backfillJob(context, subName);
+  },
+});
+
+// Phase 0 runtime probe: scheduler job timeout budget (E-SchedulerTimeout).
+// Triggered from mod menu item "[Sentinel] Probe: Scheduler timeout".
+Devvit.addSchedulerJob({
+  name: 'sentinel.probe.scheduler-timeout',
+  onRun: async (event, context) => {
+    const targetDurationMs = (event.data?.['targetDurationMs'] as number) ?? 30_000;
+    await probeSchedulerTimeout(context, targetDurationMs);
   },
 });
 

@@ -8,8 +8,9 @@ import { evaluateMemoryOnComment } from '../engines/memory/evaluate.js';
 import { dispatchAlert } from '../alerts/dispatch.js';
 import { performModAction, revertModAction } from '../alerts/mod-action.js';
 import { newAlertId } from '../lib/id.js';
-import { loadSettings, readAudit, saveSettings } from '../storage/redis.js';
-import type { Alert } from '../types/graph.js';
+import { appendAuditDeterministic, loadSettings, readAudit, saveSettings } from '../storage/redis.js';
+import { k } from '../storage/keys.js';
+import type { Alert, AuditEntry } from '../types/graph.js';
 
 async function requireMod(context: Ctx): Promise<boolean> {
   const subName = context.subredditName ?? '';
@@ -141,6 +142,79 @@ export function registerMenuItems(): void {
       settings.enabled = !settings.enabled;
       await saveSettings(context.redis, settings);
       context.ui.showToast(`Sentinel is now ${settings.enabled ? 'ON' : 'OFF'}`);
+    },
+  });
+
+  // --- Runtime probes (Phase 0 spike) ---
+  // These menu items exist solely for live playtest measurement. They are
+  // mod-only and do not affect production data beyond writing audit entries.
+
+  // Probe 1: scheduler job timeout budget (E-SchedulerTimeout).
+  // Each press bumps the target duration by 30s (capped at 300s).
+  // Absence of the completion audit entry within 5 min = job was killed.
+  Devvit.addMenuItem({
+    location: 'subreddit',
+    label: '[Sentinel] Probe: Scheduler timeout',
+    forUserType: 'moderator',
+    onPress: async (_event, context) => {
+      if (!(await requireMod(context))) return;
+      try {
+        const lastRaw = await context.redis.get(k.probeSchedulerLastTarget());
+        const last = lastRaw ? parseInt(lastRaw, 10) : 0;
+        const targetDurationMs = Math.min((isNaN(last) ? 0 : last) + 30_000, 300_000);
+        await context.redis.set(k.probeSchedulerLastTarget(), String(targetDurationMs));
+        await context.scheduler.runJob({
+          name: 'sentinel.probe.scheduler-timeout',
+          runAt: new Date(),
+          data: { targetDurationMs },
+        });
+        context.ui.showToast(
+          `Probe scheduled. Check Activity tab in 60s. Expected completion: ${targetDurationMs / 1000}s.`,
+        );
+      } catch (err) {
+        context.ui.showToast(`Probe error: ${String(err).slice(0, 80)}`);
+      }
+    },
+  });
+
+  // Probe 2: Redis write throughput (E-RedisThrottle).
+  // Runs inline: 1000 redis.set calls measured in 100-call windows.
+  // Result written to audit log; check Activity tab after press.
+  Devvit.addMenuItem({
+    location: 'subreddit',
+    label: '[Sentinel] Probe: Redis throttle',
+    forUserType: 'moderator',
+    onPress: async (_event, context) => {
+      if (!(await requireMod(context))) return;
+      try {
+        const TOTAL = 1000;
+        const BATCH = 100;
+        const msPerBatch: number[] = [];
+
+        for (let b = 0; b < TOTAL; b += BATCH) {
+          const batchStart = Date.now();
+          for (let i = b; i < b + BATCH; i++) {
+            await context.redis.set(`sentinel:probe:redis:throttle:${i}`, '1');
+          }
+          msPerBatch.push(Date.now() - batchStart);
+        }
+
+        const traceStr = msPerBatch.map((ms) => `${ms}ms`).join(',');
+        const ts = Date.now();
+        const entry: AuditEntry = {
+          entryId: `probe_redis_throttle:${ts}`,
+          ts,
+          modUsername: 'sentinel',
+          action: `probe_redis_throttle:ms_per_batch:[${traceStr}]`,
+          target: { type: 'sub', id: context.subredditId ?? '' },
+          reverted: false,
+          revertibleUntil: 0,
+        };
+        await appendAuditDeterministic(context.redis, entry);
+        context.ui.showToast('Probe done. Check Activity tab for ms-per-batch trace.');
+      } catch (err) {
+        context.ui.showToast(`Probe error: ${String(err).slice(0, 80)}`);
+      }
     },
   });
 

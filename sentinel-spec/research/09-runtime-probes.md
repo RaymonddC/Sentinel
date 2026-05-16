@@ -1,17 +1,17 @@
 # 09 · Runtime probes (Phase 0 spike)
 
-> **Status:** 1/6 probe answered locally; 5/6 require a live Devvit playtest.
-> Treat the env-bound probes as blockers for any spec-pinned parameter that
-> depends on them. Record real outcomes inline.
+> **Status:** 3/6 probes resolved (1 local, 2 static); 3/6 still require a live
+> Devvit playtest. Treat the env-bound probes as blockers for any spec-pinned
+> parameter that depends on them. Record real outcomes inline.
 
 | Probe | Status | Where it can run |
 |---|---|---|
 | E-Trigram-Perf | ✅ Local | covered by `src/__tests__/perf.test.ts` |
-| E-SlowMode-API | ⏳ Pending | `devvit playtest` in a test sub |
+| E-SlowMode-API | ✅ RESOLVED — static | type-surface inspection of `@devvit/public-api` |
 | E-SchedulerTimeout | ⏳ Pending | `devvit playtest` (schedule a one-off job) |
 | E-RedisThrottle | ⏳ Pending | `devvit playtest` (loop writes) |
 | E-SlowMode-Impact | ⏳ Pending | live test sub mid-brigade (depends on E-SlowMode-API) |
-| E-useInterval | ⏳ Pending | `devvit playtest` (probe inside custom-post render) |
+| E-useInterval | ✅ RESOLVED — static | type-surface inspection of `@devvit/public-api` |
 
 ## E-Trigram-Perf ✅
 
@@ -26,21 +26,40 @@ host, tighten by trimming `topNgrams` from 50 to 30 in
 **Outcome (local):** under 20ms on Node 22 / Linux. Devvit runtime numbers
 TBD.
 
-## E-SlowMode-API (highest priority — blocks demo)
+## E-SlowMode-API ✅ RESOLVED — static
 
 Probe whether `@devvit/public-api` exposes a programmatic slow-mode toggle.
 
-- [ ] `context.reddit.getSubredditById(...).setSlowMode(intervalSeconds)`
-- [ ] `context.reddit.getSubredditInfoById(...).mod.setSlowMode(...)`
-- [ ] `context.reddit.getPostById(postId).setSuggestedSort('controversial')` as partial alternative
-- [ ] AutoModerator wiki edit via `context.reddit.getWikiPage('config/automoderator').edit({ content })`
+**Method:** Full grep + manual inspection of all `.d.ts` files in
+`node_modules/@devvit/public-api/` (v0.11.x). Searched namespaces:
+`setSlowMode`, `slowMode`, `slow_mode`, `setOptions`, `modSettings`,
+`subreddit.settings`, `rate`, `throttle`, and every method on
+`RedditAPIClient`, `Subreddit`, `SubredditInfo`, and `SubredditSettings`.
 
-**Pass:** at least one toggle works in `devvit playtest`.
-**Fail:** keep the Redis-flag + stickied-comment fallback in
-`src/alerts/mod-action.ts § applySlowMode`. Demo narration:
-"Sentinel marks the thread for slow mode; mod confirms with one click."
+**Result: API does NOT exist.**
 
-**Outcome:** _record here_
+- `Subreddit` class — no slow-mode methods; no `setOptions`, no `modSettings`.
+- `SubredditSettings` type — contains `restrictCommenting` and `restrictPosting`
+  (subreddit-wide booleans) but **no slow-mode field of any kind**.
+- `SubredditInfo` type — no slow-mode property.
+- `RedditAPIClient` — no slow-mode method; full method list confirmed (banUser,
+  muteUser, modNotes, wiki, flair, widgets, etc.). Zero hits for "slow".
+- Hypothesized paths confirmed absent:
+  - [x] `context.reddit.getSubredditById(...).setSlowMode(...)` — **not found**
+  - [x] `context.reddit.getSubredditInfoById(...).mod.setSlowMode(...)` — **not found**
+  - [x] `context.reddit.modSettings` — **not found**
+  - [x] `subreddit.setOptions(...)` — **not found**
+- AutoModerator wiki path (`context.reddit.getWikiPage(subredditName,
+  'config/automoderator')` → `.update(content, reason?)`) **is possible** as a
+  raw wiki edit, but AutoModerator has no slow-mode directive — it only handles
+  comment/post rules. This is not a slow-mode toggle.
+
+**Implication for Sentinel:**
+→ Keep fallback; sticky-comment is the path forward. The Redis-flag +
+stickied-mod-distinguished-comment implementation in
+`src/alerts/mod-action.ts § applySlowMode` is correct and final.
+Demo narration: "Sentinel marks the thread for slow mode; mod confirms with one click."
+No code changes required.
 
 ## E-SchedulerTimeout
 
@@ -73,13 +92,52 @@ before vs after.
 
 **Outcome:** _record here_
 
-## E-useInterval
+## E-useInterval ✅ RESOLVED — static
 
-Probe whether `useInterval(30_000)` is available inside `addCustomPostType`'s
-render context.
+Probe whether `useInterval` is available inside `addCustomPostType`'s render context.
 
-- Pass: polling works.
-- Fail: dashboard refreshes on tab switch + add a manual "Refresh" button to
-  `src/ui/post.tsx`.
+**Method:** Inspection of `node_modules/@devvit/public-api/` declaration files
+(`index.d.ts`, `types/hooks.d.ts`, `types/context.d.ts`,
+`devvit/internals/blocks/handler/useInterval.d.ts`).
 
-**Outcome:** _record here_
+**Result: useInterval EXISTS and is exported.**
+
+**Export path:**
+```
+import { useInterval } from '@devvit/public-api';
+```
+Confirmed in `index.d.ts`:
+```
+export { useInterval } from './devvit/internals/blocks/handler/useInterval.js';
+```
+
+**TypeScript signature:**
+```ts
+// Top-level named export (preferred):
+function useInterval(
+  callback: () => void | Promise<void>,
+  requestedDelayMs: number
+): UseIntervalResult;
+
+type UseIntervalResult = {
+  start: () => void;  // Start the interval
+  stop: () => void;   // Stop the interval
+};
+
+// Also available (deprecated) via context:
+context.useInterval(callback, delay): UseIntervalResult
+```
+
+**Constraints (from JSDoc in `types/hooks.d.ts`):**
+- Delay must be **at least 100ms** (`delay must be at least 100ms`).
+- **Only one `useInterval` hook may be running at a time** per render context.
+- Available only within a Block Component (inside `addCustomPostType` render).
+- `.start()` / `.stop()` control lifecycle explicitly — does not auto-start on creation.
+- Callback may be async (`Promise<void>`).
+
+**Implication for Sentinel:**
+→ Dashboard auto-refresh via `useInterval` is viable; wire up in
+`src/ui/post.tsx` with `interval.start()` after creation. Minimum delay is
+100ms (30 000ms for 30s polls is well above the floor). No "Refresh" button
+required as a fallback. The `depends: [tab]` pattern in `useAsync` already
+handles tab-switch refresh; `useInterval` can layer on top for live polling.

@@ -1,7 +1,7 @@
 {
-  "name": "sentinel",
-  "version": "0.1.0",
-  "license": "MIT",
+  "name": "sentinel-h",
+  "version": "0.0.0",
+  "license": "BSD-3-Clause",
   "description": "Sentinel — Reddit moderation intelligence platform on Devvit. Three engines (Raid Radar, Memory, Health Score) on a shared behavioral graph.",
   "private": true,
   "type": "module",
@@ -15,7 +15,7 @@
     "playtest": "devvit playtest"
   },
   "dependencies": {
-    "@devvit/public-api": "0.11.x"
+    "@devvit/public-api": "0.12.23"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

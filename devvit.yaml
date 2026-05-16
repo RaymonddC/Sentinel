@@ -1,8 +1,11 @@
-name: sentinel
+name: sentinel-h
 version: 0.1.0
 marketplace:
   display_name: Sentinel
-  description: Moderation intelligence — coordinated brigade detection, ban-evader fingerprinting, and thread-escalation forecasts. Reversible, suggest-only, audit-logged.
+  description: >-
+    Moderation intelligence — coordinated brigade detection, ban-evader
+    fingerprinting, and thread-escalation forecasts. Reversible, suggest-only,
+    audit-logged.
 permissions:
   read_posts: true
   read_comments: true

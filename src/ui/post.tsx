@@ -1,7 +1,7 @@
 // Sentinel Dashboard — the one and only Devvit custom post.
 // Mod-gated content; non-mods see a neutral placeholder.
 
-import { Devvit, useState, useAsync, type JSONValue } from '@devvit/public-api';
+import { Devvit, useState, useAsync, useInterval, type JSONValue } from '@devvit/public-api';
 import { COLOR, FONT, RADIUS, ROW, SPACE } from './tokens.js';
 import { loadSettings, loadAlert, listOpenAlerts, readAudit } from '../storage/redis.js';
 import { listWatched } from '../engines/health-score/watched.js';
@@ -97,10 +97,15 @@ export const Dashboard: Devvit.CustomPostComponent = (context) => {
   const [tab, setTab] = useState<TabId>('threats');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(false);
+  const [tick, setTick] = useState<number>(0);
+  const [welcomedThisSession, setWelcomedThisSession] = useState<boolean>(false);
+
+  // 30-second live polling: incrementing tick triggers useAsync to re-fetch.
+  const interval = useInterval(() => { setTick((t) => t + 1); }, 30_000);
 
   // The loaded data is JSON-shaped at runtime but TypeScript can't infer the index
   // signature from our nominal type. Cast through unknown at the boundary.
-  const { data, loading } = useAsync(async () => (await loadDashboardData(context)) as unknown as JSONValue, { depends: [tab] });
+  const { data, loading } = useAsync(async () => (await loadDashboardData(context)) as unknown as JSONValue, { depends: [tab, tick] });
   const dash = data as unknown as DashboardData | null;
 
   if (loading || !dash) {
@@ -124,15 +129,21 @@ export const Dashboard: Devvit.CustomPostComponent = (context) => {
   // First-run onboarding modal. Flips the welcomed flag and falls through to the
   // normal dashboard on press. Gated by sentinel:install:welcomed key per the
   // ultraplan; same key is cleared on every AppInstall trigger.
-  if (!dash.welcomed) {
+  // welcomedThisSession lets the UI flip immediately on button press without a
+  // full round-trip back to Redis.
+  if (!dash.welcomed && !welcomedThisSession) {
     return (
       <WelcomeScreen
         onGetStarted={async () => {
           await context.redis.set('sentinel:install:welcomed', '1');
+          setWelcomedThisSession(true);
         }}
       />
     );
   }
+
+  // Past the welcome screen — start live 30-second polling.
+  interval.start();
 
   const showBanner = !dash.bootstrapComplete && !bannerDismissed && dash.installedAt > 0 && nowMs() - dash.installedAt < RAMP_DAYS * MS_PER_DAY;
   const openCount = dash.alerts.filter((a) => a.status === 'open').length;

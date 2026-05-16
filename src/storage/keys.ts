@@ -23,4 +23,6 @@ export const k = {
   countersActionsToday: (yyyymmdd: string) => `sentinel:counters:actions:${yyyymmdd}`,
   // Pinned post id stored once at install.
   dashboardPostId: () => 'sentinel:dashboard_post_id',
+  // Probe: tracks the last scheduler-timeout target so each press bumps +30s.
+  probeSchedulerLastTarget: () => 'sentinel:probe:scheduler:last_target',
 };
