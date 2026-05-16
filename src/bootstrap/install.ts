@@ -1,15 +1,16 @@
 // P1 — at install: top-1000 hot posts → SubBaseline + initial UserFingerprint stubs.
-// Per plan: ≤50 API calls, < 2 min, non-blocking. P1 indexes post-level metadata only;
-// comment-level enrichment is P3 (progressive backfill during 7-day ramp).
+// Per follow-up review: ≤50 API calls, < 2 min, non-blocking. P1 indexes
+// post-level metadata only (one listing call; no per-author lookups).
+// Account-creation dates are resolved lazily by ingestComment on first
+// CommentSubmit from each author; P3 refines further during the 7-day ramp.
 
 import type { Ctx } from '../types/ctx.js';
 import { loadBaseline, saveBaseline, loadUser, saveUser } from '../storage/redis.js';
 import { RollingStat } from '../storage/rolling-stat.js';
-import { TimeSeries } from '../storage/time-series.js';
 import { Histogram } from '../storage/histogram.js';
 import { emptyStylometry } from '../engines/memory/stylometry.js';
 import type { SubBaseline, UserFingerprint } from '../types/graph.js';
-import { MS_PER_DAY, nowMs } from '../lib/time.js';
+import { nowMs } from '../lib/time.js';
 
 export async function ensureBaseline(redis: Ctx['redis'], subId: string): Promise<SubBaseline> {
   const existing = await loadBaseline(redis);
@@ -41,8 +42,10 @@ export interface BootstrapStats {
 }
 
 /**
- * P1 bootstrap. Fetches the sub's hot listing (one paginated call, paginated by Devvit)
- * and folds post-level metadata into baseline + minimal UserFingerprint stubs.
+ * P1 bootstrap. One listing API call. Folds post-level metadata into the
+ * SubBaseline and creates skeleton UserFingerprint records for unique authors
+ * (accountCreatedAt left at 0 — filled in lazily on first comment from that
+ * user, or by P3 progressive backfill).
  */
 export async function runP1Bootstrap(context: Ctx, subredditName: string): Promise<BootstrapStats> {
   const start = nowMs();
@@ -51,46 +54,30 @@ export async function runP1Bootstrap(context: Ctx, subredditName: string): Promi
   let authorsIndexed = 0;
 
   const baseline = await ensureBaseline(context.redis, subredditName);
-  const ageHist = Histogram.fromJSON(baseline.accountAgeDistribution, Histogram.accountAge10);
-  const subId = baseline.subId;
 
-  // ONE listing call (Devvit handles pagination internally up to limit).
-  // We cap visible posts at 1000 but stop fetching after 50 internal API requests
-  // by relying on Devvit's getHotPosts pagination behaviour.
   try {
+    // ONE listing call. Devvit's getHotPosts paginates internally.
     const listing = context.reddit.getHotPosts({ subredditName, limit: 1000 });
     apiCalls += 1;
 
-    // Iterate the async iterator post-by-post; Devvit batches network requests.
+    const postsPerHour = RollingStat.fromJSON(baseline.postsPerHour, RollingStat.M_MAX_HOURLY);
+
     for await (const post of listing) {
       postsScanned += 1;
+      postsPerHour.push(1);
 
-      // Post-level signal: post timestamp updates the postsPerHour rolling stat.
-      // We accumulate posts/hour by spreading the listing across the trailing window — use 1 sample per post.
-      // (P3 backfill will refine this with actual hourly rates.)
-
-      // Author fingerprint stub.
       const authorId = post.authorId ?? null;
       const authorName = post.authorName ?? null;
       if (authorId && authorName) {
         const existing = await loadUser(context.redis, authorId);
         if (!existing) {
-          // post.author isn't on the Post model; resolve via getUserById and accept the cost.
-          let createdAt = 0;
-          try {
-            const user = await context.reddit.getUserById(authorId);
-            const ca = user?.createdAt;
-            createdAt = ca instanceof Date ? ca.getTime() : 0;
-          } catch {
-            // user unavailable — leave createdAt = 0
-          }
-          if (createdAt > 0) ageHist.add(nowMs() - createdAt);
-          else ageHist.add(-1); // unknown bucket
+          // accountCreatedAt unknown at this stage — filled in lazily by ingestComment.
+          // No getUserById call here (would exceed the ≤50 API budget).
           const createdMs = post.createdAt instanceof Date ? post.createdAt.getTime() : nowMs();
           const fp: UserFingerprint = {
             userId: authorId,
             username: authorName,
-            accountCreatedAt: createdAt,
+            accountCreatedAt: 0,
             firstSeenInSub: createdMs,
             lastSeenInSub: createdMs,
             totalComments: 0,
@@ -115,11 +102,12 @@ export async function runP1Bootstrap(context: Ctx, subredditName: string): Promi
 
       if (postsScanned >= 1000) break;
     }
+
+    baseline.postsPerHour = postsPerHour.toJSON();
   } catch (err) {
     console.error('[sentinel] P1 bootstrap error', err);
   }
 
-  baseline.accountAgeDistribution = ageHist.toJSON();
   baseline.lastUpdated = nowMs();
   // P1 does not flip bootstrapComplete — that happens after the 7-day ramp completes (P3).
   await saveBaseline(context.redis, baseline);
@@ -130,5 +118,4 @@ export async function runP1Bootstrap(context: Ctx, subredditName: string): Promi
     apiCalls,
     durationMs: nowMs() - start,
   };
-  void subId;
 }
