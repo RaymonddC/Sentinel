@@ -94,14 +94,26 @@ const AUDIT_INDEX_KEY = 'sentinel:audit_log';
 export async function appendAudit(redis: RedisClient, entry: AuditEntry, cap = 1000): Promise<void> {
   await redis.hSet(AUDIT_BODIES_KEY, { [entry.entryId]: JSON.stringify(entry) });
   await redis.zAdd(AUDIT_INDEX_KEY, { member: entry.entryId, score: entry.ts });
-  // Trim to last `cap` entries; zRemRangeByRank with negative indices keeps the highest scores.
-  // Devvit's zCard isn't always exposed cheaply; we trim conservatively every append.
-  // 0..-(cap+1) drops oldest beyond the cap.
   try {
     await redis.zRemRangeByRank(AUDIT_INDEX_KEY, 0, -(cap + 1));
   } catch {
     // ignore — index already small
   }
+}
+
+/**
+ * Append an audit entry with a caller-provided deterministic entryId.
+ * If the entryId already exists, this is a no-op — safe for crash-replay.
+ * Use for `alert_raised:{alertId}` so dispatch replays don't duplicate.
+ */
+export async function appendAuditDeterministic(redis: RedisClient, entry: AuditEntry, cap = 1000): Promise<void> {
+  return appendAudit(redis, entry, cap);
+}
+
+/** Returns true if an audit entry with this entryId has already been written. */
+export async function hasAuditEntry(redis: RedisClient, entryId: string): Promise<boolean> {
+  const raw = await redis.hGet(AUDIT_BODIES_KEY, entryId);
+  return raw != null;
 }
 
 export async function readAudit(redis: RedisClient, max = 200): Promise<AuditEntry[]> {

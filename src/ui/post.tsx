@@ -23,6 +23,7 @@ interface DashboardData {
   watchedCount: number;
   installedAt: number;
   bootstrapComplete: boolean;
+  welcomed: boolean;
   settings: Awaited<ReturnType<typeof loadSettings>>;
   actionsToday: number;
 }
@@ -50,10 +51,14 @@ async function loadDashboardData(context: Devvit.Context): Promise<DashboardData
       watchedCount: 0,
       installedAt: 0,
       bootstrapComplete: false,
+      welcomed: true,
       settings: await loadSettings(context.redis),
       actionsToday: 0,
     };
   }
+
+  const welcomedRaw = await context.redis.get('sentinel:install:welcomed');
+  const welcomed = welcomedRaw === '1';
 
   const [openIds, audit, settings, watched] = await Promise.all([
     listOpenAlerts(context.redis, 50),
@@ -85,7 +90,7 @@ async function loadDashboardData(context: Devvit.Context): Promise<DashboardData
     }
   }
 
-  return { isMod: true, openAlertIds: openIds, alerts, audit, watchedCount: watched.length, installedAt, bootstrapComplete, settings, actionsToday };
+  return { isMod: true, openAlertIds: openIds, alerts, audit, watchedCount: watched.length, installedAt, bootstrapComplete, welcomed, settings, actionsToday };
 }
 
 export const Dashboard: Devvit.CustomPostComponent = (context) => {
@@ -113,6 +118,19 @@ export const Dashboard: Devvit.CustomPostComponent = (context) => {
         <text size="medium" color={COLOR.fg1}>Moderation intelligence is active on this subreddit.</text>
         <text size="xsmall" color={COLOR.fg2}>Visible to mods only. Updated automatically.</text>
       </vstack>
+    );
+  }
+
+  // First-run onboarding modal. Flips the welcomed flag and falls through to the
+  // normal dashboard on press. Gated by sentinel:install:welcomed key per the
+  // ultraplan; same key is cleared on every AppInstall trigger.
+  if (!dash.welcomed) {
+    return (
+      <WelcomeScreen
+        onGetStarted={async () => {
+          await context.redis.set('sentinel:install:welcomed', '1');
+        }}
+      />
     );
   }
 
@@ -183,11 +201,51 @@ const TabBar = ({ active, onChange, openCount, criticalCount }: { active: TabId;
 };
 
 const CalibrationBanner = ({ onDismiss }: { onDismiss: () => void }) => (
-  <hstack padding="small" backgroundColor={COLOR.bgRaised} gap="small" alignment="middle">
+  <hstack padding="small" backgroundColor={COLOR.bgRaised} gap="small" alignment="middle" minHeight={`${ROW.touchMin}px`}>
     <text size="small" color={COLOR.fg1}>ℹ Sentinel is calibrating to your sub. Detection is active, accuracy improves over the next 7 days.</text>
     <spacer grow />
-    <text size="small" color={COLOR.fg2} onPress={onDismiss}>✕</text>
+    <hstack onPress={onDismiss} minWidth={`${ROW.touchMin}px`} minHeight={`${ROW.touchMin}px`} alignment="center middle">
+      <text size="small" color={COLOR.fg2}>✕</text>
+    </hstack>
   </hstack>
+);
+
+const WelcomeScreen = ({ onGetStarted }: { onGetStarted: () => Promise<void> | void }) => (
+  <vstack height="100%" padding="large" backgroundColor={COLOR.bgPanel} gap="medium">
+    <text size="xxlarge" weight="bold" color={COLOR.fg0}>👋 Welcome to Sentinel</text>
+    <text size="medium" color={COLOR.fg1}>
+      Scanning your sub's recent activity to seed your baseline. Detection is active immediately;
+      accuracy improves over the next 7 days.
+    </text>
+    <text size="small" color={COLOR.fg2}>
+      Memory activates the first time you ban a user; accuracy improves as your ban history grows.
+    </text>
+    <vstack
+      backgroundColor={COLOR.bgRaised}
+      cornerRadius="medium"
+      padding="medium"
+      gap="small"
+    >
+      <text size="small" color={COLOR.fg1}>You'll see in this dashboard:</text>
+      <text size="small" color={COLOR.fg0}>🚨 Coordinated brigades and raid attacks</text>
+      <text size="small" color={COLOR.fg0}>🔍 Possible ban evaders (returning banned users)</text>
+      <text size="small" color={COLOR.fg0}>📊 Threads escalating toward needing intervention</text>
+    </vstack>
+    <text size="xsmall" color={COLOR.fg2}>
+      Settings (sensitivity, auto-actions, modmail) live in the app's install dialog
+      under r/yoursub → Mod Tools → Sentinel.
+    </text>
+    <spacer grow />
+    <hstack
+      backgroundColor={COLOR.accent}
+      cornerRadius="medium"
+      alignment="center middle"
+      minHeight={`${ROW.touchMin}px`}
+      onPress={onGetStarted}
+    >
+      <text size="medium" weight="bold" color={COLOR.fgInv}>Get started</text>
+    </hstack>
+  </vstack>
 );
 
 const Kpis = ({ activeCount, watchedCount, actionsToday, timeSavedMinutes }: { activeCount: number; watchedCount: number; actionsToday: number; timeSavedMinutes: number }) => (
@@ -227,7 +285,7 @@ const AlertCard = ({ alert, expanded, onToggle }: { alert: Alert; expanded: bool
   const cfg = severityConfig(alert.severity);
   return (
     <vstack backgroundColor={COLOR.bgPanel} cornerRadius="medium" border="thin" borderColor={COLOR.border}>
-      <hstack padding="small" gap="small" alignment="top" onPress={onToggle}>
+      <hstack padding="small" gap="small" alignment="top" onPress={onToggle} minHeight={`${ROW.touchMin}px`}>
         <vstack width="4px" backgroundColor={cfg.color} grow={false} />
         <vstack grow gap="small">
           <hstack gap="small">
