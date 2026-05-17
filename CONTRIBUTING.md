@@ -51,27 +51,49 @@ Each developer needs a private test subreddit to install and playtest Sentinel. 
 
 ---
 
-## Two collaboration paths
+## How collaboration works
 
-### Preferred — Devvit collaborator (shared slug)
+**Important:** Devvit currently has no built-in multi-developer feature. Each Devvit app slug is owned by exactly one Reddit account. There is no "add collaborator" option in the developer portal as of 2026-05.
 
-Ask the repo owner to add you as a **collaborator** on the `sentinel-h` app:
+So contributors **share the codebase** (this GitHub repo) but **each run their own Devvit app slug** under their own Reddit dev account.
 
-1. Owner goes to [developers.reddit.com](https://developers.reddit.com) → Apps → `sentinel-h` → Settings → Collaborators
-2. Owner adds your Reddit username
-3. You can now run `devvit install r/<your-test-sub>` under the shared `sentinel-h` slug
+### One-time setup for a new contributor
 
-This is the recommended path. Each collaborator gets their own subreddit with isolated state, but you all share one versioned app slug. The owner uploads new versions; collaborators install them on their subs.
+1. Register your own Devvit slug. From your clone:
 
-### Alternative — your own dev slug
+   ```bash
+   # Edit devvit.yaml to change the slug to something globally unique.
+   # Example: if your Reddit username is u/raysmithy, use `sentinel-raysmithy`.
+   ```
 
-If you can't be added as a collaborator (e.g., you're an external contributor reviewing a PR):
+2. Tell git to ignore your local slug change so you don't accidentally commit it:
 
-1. Copy `devvit.yaml` locally and change `name:` to something unique like `sentinel-yourname`
-2. Register the new app slug: `devvit upload` (first upload registers it under your Reddit account)
-3. Install on your sub: `devvit install r/<your-test-sub>`
+   ```bash
+   git update-index --skip-worktree devvit.yaml
+   ```
 
-> **Important**: Never commit a renamed `devvit.yaml` to the repo. Keep your local overlay untracked (add to `.gitignore` or just don't stage it). The canonical slug `sentinel-h` must stay in version control.
+   This is the right tool for "tracked file with local-only modifications" — `.gitignore` wouldn't work because the file is already tracked.
+
+3. Verify:
+
+   ```bash
+   git status   # devvit.yaml should NOT appear as modified
+   ```
+
+4. Then continue with the daily dev loop below — `devvit upload`, `devvit playtest`, etc. — under your own slug.
+
+### Reverting skip-worktree (if you ever need to)
+
+```bash
+git update-index --no-skip-worktree devvit.yaml
+git checkout devvit.yaml   # discard local slug edit and restore the canonical slug
+```
+
+### Coordinating uploads
+
+- Only the **repo owner** uploads under the canonical `sentinel-h` slug (this is the slug pinned to the production install path / future app-store listing).
+- Other contributors test on their own slugs and submit changes via pull request.
+- After PR merge, the repo owner runs `devvit upload` against `sentinel-h` to ship the merged code to the canonical app.
 
 ---
 
@@ -96,7 +118,7 @@ devvit upload
 devvit playtest r/<your-test-sub>
 
 # 7. In your browser, open your sub with the playtest param:
-#    https://www.reddit.com/r/<your-test-sub>/?playtest=sentinel-h
+#    https://www.reddit.com/r/<your-test-sub>/?playtest=<your-slug>
 #    Refresh after code changes — playtest mode hot-reloads the UI
 ```
 
@@ -179,9 +201,9 @@ If your test subreddit is marked "Adult Content", Reddit wraps the Sentinel cust
 
 ### `?playtest=<slug>` is required in dev mode
 
-When playtesting, the dev version of the app is only visible with the `?playtest=sentinel-h` URL parameter. Without it, you'll see the latest **published** version (or nothing if you haven't published). Always open:
+When playtesting, the dev version of the app is only visible with the `?playtest=<your-slug>` URL parameter (use the slug from your `devvit.yaml`). Without it, you'll see the latest **published** version (or nothing if you haven't published). Always open:
 ```
-https://www.reddit.com/r/<your-test-sub>/?playtest=sentinel-h
+https://www.reddit.com/r/<your-test-sub>/?playtest=<your-slug>
 ```
 
 ### AppInstall trigger only fires on first install
