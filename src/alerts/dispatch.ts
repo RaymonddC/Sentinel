@@ -7,6 +7,7 @@ import { k } from '../storage/keys.js';
 import { loadAlert, saveAlert, appendAuditDeterministic, hasAuditEntry } from '../storage/redis.js';
 import { runTx } from '../storage/transactions.js';
 import { nowMs } from '../lib/time.js';
+import { log } from '../lib/logger.js';
 import type { Alert, AuditEntry } from '../types/graph.js';
 import { engineCopy } from './messages.js';
 import { withinQuietHours } from './quiet-hours.js';
@@ -34,7 +35,11 @@ export async function dispatchAlert(context: Ctx, alert: Alert): Promise<void> {
     },
   );
   if (!txResult.ok) {
-    console.warn('[sentinel] dispatch tx failed for', alert.alertId, txResult.failure);
+    await log(context, {
+      level: 'warn', scope: 'dispatch', msg: 'dispatch tx failed',
+      ctx: { alertId: alert.alertId, reason: txResult.failure.reason },
+      err: txResult.failure.error,
+    });
     // Fall through — idempotent steps 4-7 will pick up where we left off on replay.
     return;
   }
@@ -82,7 +87,7 @@ export async function dispatchAlert(context: Ctx, alert: Alert): Promise<void> {
           });
         }
       } catch (err) {
-        console.warn('[sentinel] modmail send failed', err);
+        await log(context, { level: 'warn', scope: 'dispatch', msg: 'modmail send failed', err });
       }
     }
   }

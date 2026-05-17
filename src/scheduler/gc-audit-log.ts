@@ -2,6 +2,7 @@
 
 import type { Ctx } from '../types/ctx.js';
 import { nowMs } from '../lib/time.js';
+import { log } from '../lib/logger.js';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const RETENTION_MS = 30 * MS_PER_DAY;
@@ -19,7 +20,7 @@ export async function gcAuditLog(context: Ctx): Promise<{ dropped: number }> {
   try {
     await context.redis.hDel(AUDIT_BODIES_KEY, ids);
   } catch (err) {
-    console.warn('[sentinel] hDel audit bodies failed', err);
+    await log(context, { level: 'warn', scope: 'scheduler.gc_audit', msg: 'hDel audit bodies failed', err });
   }
   await context.redis.zRemRangeByScore(AUDIT_INDEX_KEY, 0, threshold);
   return { dropped: ids.length };

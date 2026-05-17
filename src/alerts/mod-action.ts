@@ -1,22 +1,23 @@
 // performModAction / revertModAction — the Undo foundation. Per 02-architecture.md.
-// Implementation forks on slow-mode API availability (Phase 0 spike outcome).
-// In this v1 implementation we use the documented fallback path:
-//   - set a Redis flag for the thread
-//   - submit a stickied mod-distinguished comment under the thread
+// Phase 0 probe E-SlowMode-API (RESOLVED static): Devvit has NO programmatic
+// slow-mode API on RedditAPIClient, Subreddit, SubredditSettings, or anywhere else.
+// This is the final implementation — no native API to wire in later:
+//   - set a Redis flag for the thread (Sentinel's internal "recommended" state)
+//   - submit a stickied mod-distinguished comment notifying the mod team
 //   - capture inverse metadata so revert restores the prior state exactly.
-// If a future Phase 0 result confirms a native Devvit slow-mode API, wire it
-// through `applySlowMode` / `clearSlowMode` below in one spot.
+// Mods MUST enable slow mode manually via Reddit's subreddit settings UI.
 
 import type { Ctx } from '../types/ctx.js';
 import { MS_PER_DAY, nowMs } from '../lib/time.js';
 import { newAuditEntryId } from '../lib/id.js';
 import { appendAudit, loadAlert, loadThread, readAudit, saveAlert, saveThread } from '../storage/redis.js';
+import { log } from '../lib/logger.js';
 import type { AuditEntry, ModActionInverse } from '../types/graph.js';
 
 export interface PerformModActionParams {
   alertId?: string;
   modUsername: string;
-  action: 'enable_slow_mode' | 'filter_new_accts' | 'ban_user' | 'remove_post' | 'dismiss';
+  action: 'recommend_slow_mode' | 'filter_new_accts' | 'ban_user' | 'remove_post' | 'dismiss';
   target: { type: 'thread' | 'user' | 'sub'; id: string };
   parameters?: Record<string, unknown>;
   reason?: string;
@@ -33,7 +34,7 @@ export async function performModAction(context: Ctx, params: PerformModActionPar
   const now = nowMs();
   let inverse: ModActionInverse | undefined;
 
-  if (params.action === 'enable_slow_mode' && params.target.type === 'thread') {
+  if (params.action === 'recommend_slow_mode' && params.target.type === 'thread') {
     const thread = await loadThread(context.redis, params.target.id);
     if (thread) {
       inverse = {
@@ -66,14 +67,14 @@ export async function performModAction(context: Ctx, params: PerformModActionPar
         duration: Number(params.parameters?.['days'] ?? 0) || undefined,
       });
     } catch (err) {
-      console.warn('[sentinel] banUser failed', err);
+      await log(context, { level: 'warn', scope: 'mod_action', msg: 'banUser failed', err });
     }
   } else if (params.action === 'remove_post' && params.target.type === 'thread') {
     inverse = { kind: 'remove_post', removedItemId: params.target.id };
     try {
       await context.reddit.remove(params.target.id, false);
     } catch (err) {
-      console.warn('[sentinel] remove failed', err);
+      await log(context, { level: 'warn', scope: 'mod_action', msg: 'remove failed', err });
     }
   }
 
@@ -146,7 +147,7 @@ export async function revertModAction(context: Ctx, entryId: string, modUsername
             const subName = sub?.name ?? '';
             await context.reddit.unbanUser(String(entry.inverse.bannedUserId), subName);
           } catch (err) {
-            console.warn('[sentinel] unbanUser failed', err);
+            await log(context, { level: 'warn', scope: 'mod_action', msg: 'unbanUser failed', err });
           }
         }
         break;
@@ -156,7 +157,7 @@ export async function revertModAction(context: Ctx, entryId: string, modUsername
           try {
             await context.reddit.approve(entry.inverse.removedItemId);
           } catch (err) {
-            console.warn('[sentinel] approve failed', err);
+            await log(context, { level: 'warn', scope: 'mod_action', msg: 'approve failed', err });
           }
         }
         break;
@@ -195,8 +196,10 @@ export async function revertModAction(context: Ctx, entryId: string, modUsername
 }
 
 /**
- * Fallback slow-mode application: set a Redis flag and submit a stickied mod-distinguished
- * comment. If Phase 0 confirms a programmatic Devvit slow-mode API, wire it in here.
+ * Slow-mode recommendation: set a Redis flag and post a stickied mod-distinguished comment
+ * so the mod team knows this thread is flagged. Devvit has no programmatic slow-mode API
+ * (Phase 0 probe E-SlowMode-API, RESOLVED). A mod must manually enable slow mode via
+ * Reddit's subreddit settings UI.
  */
 async function applySlowMode(context: Ctx, postId: string, intervalSeconds: number): Promise<void> {
   if (intervalSeconds > 0) {
@@ -206,11 +209,11 @@ async function applySlowMode(context: Ctx, postId: string, intervalSeconds: numb
     try {
       const post = await context.reddit.getPostById(postId);
       const comment = await post.addComment({
-        text: `🛡️ Sentinel: slow mode marker (${intervalSeconds}s) — applied by mod via Sentinel. Reversible within 24h.`,
+        text: `🛡️ Sentinel: slow mode recommended for this thread (${intervalSeconds}s interval). Sentinel cannot enable slow mode programmatically — a mod must enable it manually via subreddit settings. This recommendation can be cleared in the Sentinel dashboard within 24h.`,
       });
       try { await comment.distinguish(true); } catch {}
     } catch (err) {
-      console.warn('[sentinel] slow-mode marker comment failed', err);
+      await log(context, { level: 'warn', scope: 'mod_action', msg: 'slow-mode marker comment failed', err });
     }
   } else {
     await context.redis.del(`sentinel:thread:${postId}:slow_mode`);

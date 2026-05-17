@@ -57,7 +57,7 @@ export async function evaluateHealth(context: Ctx, postId: string): Promise<{ sc
   const forecast = forecastThread(thread, breakdown.score, settings, now);
   const evidence = `Risk on "${thread.title || 'thread'}" is ${Math.round(breakdown.score)}. ` +
     `Trajectory: ${breakdown.trajectorySlope > 0 ? 'climbing' : 'stable'}. ` +
-    `Forecast 1h: no-action ${Math.round(forecast.in1Hour.risk)} · with slow mode ${Math.round(forecast.ifMitigated.risk1h)}.`;
+    `Forecast 1h: no-action ${Math.round(forecast.in1Hour.risk)} · if slow mode enabled manually ${Math.round(forecast.ifMitigated.risk1h)} (Sentinel recommends; mod enables in sub settings).`;
 
   const alert: Alert = {
     alertId: newAlertId(),

@@ -2,6 +2,7 @@
 
 import type { Ctx } from '../../types/ctx.js';
 import { loadSettings, saveBanned, setBannedIndex } from '../../storage/redis.js';
+import { log } from '../../lib/logger.js';
 import { Histogram } from '../../storage/histogram.js';
 import type { BannedFingerprint } from '../../types/graph.js';
 import { nowMs } from '../../lib/time.js';
@@ -40,7 +41,7 @@ export async function seedBannedFromModNotes(context: Ctx, subredditName: string
       seeded += 1;
     }
   } catch (err) {
-    console.warn('[sentinel] mod-notes seeding failed', err);
+    await log(context, { level: 'warn', scope: 'engine.memory', msg: 'mod-notes seeding failed', err });
   }
   return { seeded };
   void Histogram;

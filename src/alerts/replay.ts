@@ -3,6 +3,7 @@
 
 import type { Ctx } from '../types/ctx.js';
 import { listOpenAlerts, loadAlert } from '../storage/redis.js';
+import { log } from '../lib/logger.js';
 import { dispatchAlert } from './dispatch.js';
 
 export async function replayPendingAlerts(context: Ctx): Promise<{ replayed: number }> {
@@ -15,7 +16,7 @@ export async function replayPendingAlerts(context: Ctx): Promise<{ replayed: num
         await dispatchAlert(context, a);
         replayed += 1;
       } catch (err) {
-        console.warn('[sentinel] replay failed for', id, err);
+        await log(context, { level: 'warn', scope: 'dispatch', msg: 'replay failed', ctx: { alertId: id }, err });
       }
     }
   }

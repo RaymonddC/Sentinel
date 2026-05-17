@@ -128,7 +128,7 @@ export interface AuditEntry {
   modUsername: string;          // 'sentinel' for auto-actions
   engineName?: EngineName;
   action: string;
-  target: { type: 'thread' | 'user' | 'sub'; id: string };
+  target: { type: 'thread' | 'user' | 'sub' | 'system'; id: string };
   reason?: string;
   inverse?: ModActionInverse;
   reverted: boolean;

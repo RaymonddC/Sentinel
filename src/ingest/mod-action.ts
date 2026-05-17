@@ -2,6 +2,7 @@
 
 import type { Ctx } from '../types/ctx.js';
 import { loadUser, saveBanned, setBannedIndex, loadSettings, appendAudit } from '../storage/redis.js';
+import { log } from '../lib/logger.js';
 import type { BannedFingerprint, ModActionRecord } from '../types/graph.js';
 import { newAuditEntryId } from '../lib/id.js';
 import { nowMs } from '../lib/time.js';
@@ -66,7 +67,7 @@ export async function ingestModAction(context: Ctx, e: ModActionIngestEvent): Pr
             label: 'BAN',
           });
         } catch (err) {
-          console.warn('[sentinel] addModNote failed', err);
+          await log(context, { level: 'warn', scope: 'ingest.mod_action', msg: 'addModNote failed', err });
         }
       }
     }

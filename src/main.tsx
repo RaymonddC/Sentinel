@@ -12,6 +12,7 @@ import { probeSchedulerTimeout } from './scheduler/probe-scheduler-timeout.js';
 import { defaultSettings } from './types/settings.js';
 import { k } from './storage/keys.js';
 import { registerMenuItems } from './menu/items.js';
+import { log, withErrorLog } from './lib/logger.js';
 
 Devvit.configure({ redis: true, redditAPI: true, http: false });
 
@@ -31,7 +32,7 @@ Devvit.addSettings([
   },
   { type: 'boolean', name: 'sentinel_modmail_critical', label: 'Send modmail on critical alerts', defaultValue: true },
   { type: 'boolean', name: 'sentinel_mod_notes_sync', label: 'Sync banned-index to Mod Notes', defaultValue: true },
-  { type: 'boolean', name: 'sentinel_auto_slow_mode', label: 'Allow auto slow-mode on critical Raid Radar alerts (opt-in)', defaultValue: false },
+  { type: 'boolean', name: 'sentinel_auto_slow_mode', label: 'Auto-recommend slow mode on critical Raid Radar alerts — posts a mod notification; you enable it manually in Reddit subreddit settings (opt-in)', defaultValue: false },
   { type: 'boolean', name: 'sentinel_auto_filter_new', label: 'Allow auto filter-new-accounts on critical alerts (opt-in)', defaultValue: false },
 ]);
 
@@ -44,13 +45,15 @@ Devvit.addCustomPostType({
 });
 
 // Triggers — every Reddit event into a single ingestion module.
+// withErrorLog wraps each call so a top-level throw is caught and logged
+// rather than crashing the Devvit trigger runtime.
 Devvit.addTrigger({
   event: 'CommentSubmit',
   onEvent: async (event, context) => {
     const c = event.comment;
     const a = event.author;
     if (!c || !a || !event.subreddit) return;
-    await onComment(context, {
+    await withErrorLog('ingest.comment', onComment)(context, {
       postId: c.postId,
       postTitle: event.post?.title,
       subredditId: event.subreddit.id,
@@ -72,7 +75,7 @@ Devvit.addTrigger({
     const p = event.post;
     const a = event.author;
     if (!p || !a || !event.subreddit) return;
-    await onPost(context, {
+    await withErrorLog('ingest.post', onPost)(context, {
       postId: p.id,
       title: p.title ?? '',
       authorId: a.id,
@@ -89,7 +92,7 @@ Devvit.addTrigger({
   event: 'ModAction',
   onEvent: async (event, context) => {
     if (!event.action || !event.subreddit) return;
-    await onModAction(context, {
+    await withErrorLog('ingest.mod_action', onModAction)(context, {
       action: event.action,
       targetUserId: event.targetUser?.id,
       targetUserName: event.targetUser?.name,
@@ -105,7 +108,7 @@ Devvit.addTrigger({
   event: 'PostReport',
   onEvent: async (event, context) => {
     if (!event.post || !event.subreddit) return;
-    await onReport(context, {
+    await withErrorLog('ingest.report', onReport)(context, {
       postId: event.post.id,
       subredditId: event.subreddit.id,
       createdAtMs: Date.now(),
@@ -117,7 +120,7 @@ Devvit.addTrigger({
   event: 'CommentReport',
   onEvent: async (event, context) => {
     if (!event.comment || !event.subreddit) return;
-    await onReport(context, {
+    await withErrorLog('ingest.report', onReport)(context, {
       postId: event.comment.postId,
       subredditId: event.subreddit.id,
       createdAtMs: Date.now(),
@@ -147,17 +150,17 @@ Devvit.addTrigger({
           </vstack>
         ),
       });
-      try { await post.sticky(1); } catch (err) { console.warn('[sentinel] sticky failed', err); }
+      try { await post.sticky(1); } catch (err) { await log(context, { level: 'warn', scope: 'bootstrap.install', msg: 'sticky failed', err }); }
       await setDashboardPostId(context.redis, post.id);
     } catch (err) {
-      console.warn('[sentinel] dashboard post creation failed', err);
+      await log(context, { level: 'warn', scope: 'bootstrap.install', msg: 'dashboard post creation failed', err });
     }
 
     // Schedule P1 bootstrap (non-blocking).
     try {
       await context.scheduler.runJob({ name: 'sentinel_p1_bootstrap', runAt: new Date(), data: { subredditName: subName } });
     } catch (err) {
-      console.warn('[sentinel] P1 schedule failed', err);
+      await log(context, { level: 'warn', scope: 'bootstrap.install', msg: 'P1 schedule failed', err });
     }
   },
 });
@@ -180,7 +183,7 @@ Devvit.addSchedulerJob({
       try {
         await context.scheduler.runJob({ name: 'sentinel_backfill', cron: '0 * * * *', data: { subredditName: subName } });
       } catch (err) {
-        console.warn('[sentinel] backfill schedule failed', err);
+        await log(context, { level: 'warn', scope: 'bootstrap.p1', msg: 'backfill schedule failed', err });
       }
     }
   },
@@ -188,29 +191,37 @@ Devvit.addSchedulerJob({
 
 Devvit.addSchedulerJob({
   name: 'sentinel_refresh_thread_health',
-  onRun: async (_event, context) => { await refreshThreadHealth(context); },
+  onRun: async (_event, context) => {
+    await withErrorLog('scheduler.refresh_thread_health', async (ctx) => { await refreshThreadHealth(ctx); })(context);
+  },
 });
 
 Devvit.addSchedulerJob({
   name: 'sentinel_rollup_baseline',
-  onRun: async (_event, context) => { await rollupBaseline(context); },
+  onRun: async (_event, context) => {
+    await withErrorLog('scheduler.rollup_baseline', rollupBaseline)(context);
+  },
 });
 
 Devvit.addSchedulerJob({
   name: 'sentinel_gc_audit_log',
-  onRun: async (_event, context) => { await gcAuditLog(context); },
+  onRun: async (_event, context) => {
+    await withErrorLog('scheduler.gc_audit', async (ctx) => { await gcAuditLog(ctx); })(context);
+  },
 });
 
 Devvit.addSchedulerJob({
   name: 'sentinel_purge_inactive',
-  onRun: async (_event, context) => { await purgeInactiveUsers(context); },
+  onRun: async (_event, context) => {
+    await withErrorLog('scheduler.purge_inactive', async (ctx) => { await purgeInactiveUsers(ctx); })(context);
+  },
 });
 
 Devvit.addSchedulerJob({
   name: 'sentinel_backfill',
   onRun: async (event, context) => {
     const subName = (event.data?.['subredditName'] as string) ?? context.subredditName ?? '';
-    await backfillJob(context, subName);
+    await withErrorLog('scheduler.backfill', backfillJob)(context, subName);
   },
 });
 
@@ -220,7 +231,7 @@ Devvit.addSchedulerJob({
   name: 'sentinel.probe.scheduler-timeout',
   onRun: async (event, context) => {
     const targetDurationMs = (event.data?.['targetDurationMs'] as number) ?? 30_000;
-    await probeSchedulerTimeout(context, targetDurationMs);
+    await withErrorLog('scheduler.probe_timeout', probeSchedulerTimeout)(context, targetDurationMs);
   },
 });
 

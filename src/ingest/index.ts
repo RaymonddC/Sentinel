@@ -2,6 +2,7 @@
 // inside a single try/catch (handlers must never throw).
 
 import type { Ctx } from '../types/ctx.js';
+import { log } from '../lib/logger.js';
 import { ingestComment, type CommentIngestEvent } from './comment.js';
 import { ingestPost, type PostIngestEvent } from './post.js';
 import { ingestReport, type ReportIngestEvent } from './report.js';
@@ -24,7 +25,7 @@ export async function onComment(context: Ctx, e: CommentIngestEvent): Promise<vo
       await evaluateMemoryOnComment(context, e);
     }
   } catch (err) {
-    console.error('[sentinel] onComment error', err);
+    await log(context, { level: 'error', scope: 'ingest.comment', msg: 'onComment error', err });
   }
 }
 
@@ -32,7 +33,7 @@ export async function onPost(context: Ctx, e: PostIngestEvent): Promise<void> {
   try {
     await ingestPost(context, e);
   } catch (err) {
-    console.error('[sentinel] onPost error', err);
+    await log(context, { level: 'error', scope: 'ingest.post', msg: 'onPost error', err });
   }
 }
 
@@ -44,7 +45,7 @@ export async function onReport(context: Ctx, e: ReportIngestEvent): Promise<void
       await evaluateHealth(context, e.postId);
     }
   } catch (err) {
-    console.error('[sentinel] onReport error', err);
+    await log(context, { level: 'error', scope: 'ingest.report', msg: 'onReport error', err });
   }
 }
 
@@ -52,6 +53,6 @@ export async function onModAction(context: Ctx, e: ModActionIngestEvent): Promis
   try {
     await ingestModAction(context, e);
   } catch (err) {
-    console.error('[sentinel] onModAction error', err);
+    await log(context, { level: 'error', scope: 'ingest.mod_action', msg: 'onModAction error', err });
   }
 }

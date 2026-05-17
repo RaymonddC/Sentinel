@@ -1,0 +1,32 @@
+# Normalize all text files to LF — cross-platform safe, WSL-friendly.
+# Kills the persistent CRLF<->LF noise in `git diff` from Windows filesystem mounting.
+* text=auto eol=lf
+
+# Explicit text classifications — keep LF
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.toml      text eol=lf
+*.sh        text eol=lf
+
+# SVG is text but worth being explicit
+*.svg       text eol=lf
+
+# Binary — never touch
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.pdf       binary
+*.zip       binary
+*.bundle    binary

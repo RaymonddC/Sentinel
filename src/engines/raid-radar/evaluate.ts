@@ -100,10 +100,10 @@ export async function evaluateRaidRadar(context: Ctx, postId: string): Promise<v
     await performModAction(context, {
       alertId: alert.alertId,
       modUsername: 'sentinel',
-      action: 'enable_slow_mode',
+      action: 'recommend_slow_mode',
       target: { type: 'thread', id: postId },
       parameters: { intervalSeconds: 300 },
-      reason: `Raid Radar auto-action at ${(confidence * 100).toFixed(0)}% confidence`,
+      reason: `Raid Radar auto-recommendation at ${(confidence * 100).toFixed(0)}% confidence — mod must enable slow mode manually in subreddit settings`,
     });
   }
 

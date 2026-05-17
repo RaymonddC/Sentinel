@@ -6,6 +6,7 @@
 
 import type { Ctx } from '../types/ctx.js';
 import { loadBaseline, saveBaseline, loadUser, saveUser } from '../storage/redis.js';
+import { log } from '../lib/logger.js';
 import { RollingStat } from '../storage/rolling-stat.js';
 import { Histogram } from '../storage/histogram.js';
 import { emptyStylometry } from '../engines/memory/stylometry.js';
@@ -105,7 +106,7 @@ export async function runP1Bootstrap(context: Ctx, subredditName: string): Promi
 
     baseline.postsPerHour = postsPerHour.toJSON();
   } catch (err) {
-    console.error('[sentinel] P1 bootstrap error', err);
+    await log(context, { level: 'error', scope: 'bootstrap.p1', msg: 'P1 bootstrap error', err });
   }
 
   baseline.lastUpdated = nowMs();
