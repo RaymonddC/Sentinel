@@ -25,7 +25,19 @@ npm run typecheck
 devvit upload
 ```
 
-`devvit upload` pushes a new version of `sentinel-h` to Reddit's app registry. All subreddits that have Sentinel installed will automatically receive the new version — no per-sub reinstall is required.
+`devvit upload` pushes a new version of `sentinel-h` to Reddit's app registry, but **uploaded versions do NOT auto-install to existing subs** — they sit at status `Uploaded` until explicitly installed. Each install pin to a specific version.
+
+To roll out the new version to a sub:
+
+```bash
+# Promote latest version to one specific sub:
+devvit install r/<sub-name>
+
+# Or, for development with live reload:
+devvit playtest r/<sub-name>
+```
+
+Audit installed versions in the dev portal (`developers.reddit.com/apps/sentinel-h` → App Versions tab). Production deployment to a real mod-team sub will need to `devvit install r/<sub>` explicitly after every upload.
 
 ---
 
