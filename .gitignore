@@ -4,7 +4,6 @@ dist/
 *.log
 .DS_Store
 coverage/
-package-lock.json
 # Local secrets and one-off bundle handoffs (never commit)
 .env
 *.bundle
