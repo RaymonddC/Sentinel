@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [main]
 
-# Future-proof: opt in to Node.js 24 runtime for JS actions ahead of the
-# June 2026 default switch. Removes the deprecation warning.
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+# Note: a "Node.js 20 deprecated" annotation may appear until
+# actions/checkout and actions/setup-node ship @v5 with Node 24 target.
+# GitHub auto-upgrades the runtime on 2026-06-02; current warnings are
+# advisory only and do not affect CI results.
 
 jobs:
   ci:
